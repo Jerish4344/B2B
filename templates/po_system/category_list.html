@@ -1,0 +1,165 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-tags me-2"></i>Product Categories
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Manage all product categories in the system
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:category_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add New Category
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ total_count }}</h3>
+                        <p class="mb-0">Total Categories</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-tags fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-container">
+                <form method="get" id="search-form">
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" name="q" class="form-control search-input" 
+                                       placeholder="Search by category name..." 
+                                       value="{{ query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    Search
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <a href="{% url 'po_system:category_list' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-redo me-1"></i>Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Category Name</th>
+                                    <th>Head Name</th>
+                                    <th>Head Email</th>
+                                    <th class="text-center">Products</th>
+                                    <th class="text-center">Created</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ category.name }}</strong>
+                                    </td>
+                                    <td>{{ category.head_name }}</td>
+                                    <td>
+                                        <a href="mailto:{{ category.head_email }}">{{ category.head_email }}</a>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'po_system:product_list' %}?category={{ category.id }}" class="btn btn-sm btn-outline-primary">
+                                            View Products
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
+                                        {{ category.created_at|date:"M d, Y" }}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="{% url 'po_system:category_edit' category.id %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'po_system:category_delete' category.id %}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                                        <h4>No categories found</h4>
+                                        <p class="text-muted">Try adjusting your search criteria or add a new category</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if categories.has_other_pages %}
+    <nav aria-label="Categories pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if categories.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ categories.number }} of {{ categories.paginator.num_pages }}</span>
+            </li>
+            
+            {% if categories.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

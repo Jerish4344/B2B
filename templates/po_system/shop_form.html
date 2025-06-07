@@ -1,0 +1,126 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-store me-2"></i>{{ title }}
+                            </h2>
+                            <p class="text-muted mb-0">
+                                {% if shop %}
+                                    Update information for existing shop
+                                {% else %}
+                                    Add a new shop to the system
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:shop_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Shops
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Shop Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.name.help_text %}
+                                <div class="form-text">{{ form.name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">Location *</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.location.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.location.help_text %}
+                                <div class="form-text">{{ form.location.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.manager_name.id_for_label }}" class="form-label">Manager Name *</label>
+                            {{ form.manager_name }}
+                            {% if form.manager_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.manager_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.manager_name.help_text %}
+                                <div class="form-text">{{ form.manager_name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Active Shop
+                                </label>
+                                {% if form.is_active.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.is_active.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                {% if form.is_active.help_text %}
+                                    <div class="form-text">{{ form.is_active.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'po_system:shop_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>{{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

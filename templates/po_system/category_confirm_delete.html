@@ -1,0 +1,89 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-trash me-2"></i>Delete Category
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Confirm deletion of category "{{ category.name }}"
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:category_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Categories
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if product_count > 0 %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                <h4>Cannot Delete: This category has {{ product_count }} associated products</h4>
+                                <p>
+                                    You cannot delete a category that has products associated with it.
+                                    Please reassign or delete these products first.
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-trash fa-3x mb-3"></i>
+                                <h4>Warning: This action cannot be undone</h4>
+                                <p>
+                                    You are about to permanently delete the category "{{ category.name }}".
+                                    This category has no associated products and will be completely removed from the system.
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Category Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ category.name }}</p>
+                                    <p><strong>Head Name:</strong> {{ category.head_name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Head Email:</strong> {{ category.head_email }}</p>
+                                    <p><strong>Created:</strong> {{ category.created_at|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'po_system:category_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger" {% if product_count > 0 %}disabled{% endif %}>
+                                <i class="fas fa-trash me-1"></i>Delete Category
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

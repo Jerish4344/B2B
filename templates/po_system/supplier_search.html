@@ -1,0 +1,293 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Search Section -->
+        <div class="search-container">
+            <h2 class="mb-4">
+                <i class="fas fa-search me-2"></i>Search Suppliers
+            </h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" id="supplier-search" class="form-control search-input" 
+                               placeholder="Search suppliers by name or contact person..." 
+                               value="{{ query }}">
+                        <button class="btn btn-primary" type="button" onclick="searchSuppliers()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-success w-100" onclick="showBulkUpload()">
+                        <i class="fas fa-plus me-1"></i>Add New Products
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Searching suppliers...</p>
+        </div>
+
+        <!-- Suppliers List -->
+        <div id="suppliers-container">
+            {% for supplier in suppliers %}
+            <div class="supplier-card" onclick="loadSupplierProducts({{ supplier.id }})">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">
+                            <i class="fas fa-building me-2 text-primary"></i>{{ supplier.name }}
+                        </h5>
+                        <p class="mb-1">
+                            <i class="fas fa-user me-2"></i>{{ supplier.contact_person }}
+                        </p>
+                        <p class="mb-0 text-muted">
+                            <i class="fas fa-envelope me-2"></i>{{ supplier.email }}
+                            <i class="fas fa-phone ms-3 me-2"></i>{{ supplier.phone }}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <i class="fas fa-chevron-right fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                <h4>No suppliers found</h4>
+                <p class="text-muted">Try adjusting your search criteria</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if suppliers.has_other_pages %}
+        <nav aria-label="Suppliers pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if suppliers.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ suppliers.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ suppliers.number }} of {{ suppliers.paginator.num_pages }}</span>
+                </li>
+                
+                {% if suppliers.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ suppliers.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Products Modal -->
+<div class="modal fade" id="productsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-box me-2"></i>Products - <span id="supplier-name"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="products-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading products...</p>
+                </div>
+                <div id="products-content" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all-products" class="form-check-input"></th>
+                                    <th>Product</th>
+                                    <th>Current Price (₹/Kg)</th>
+                                    <th>Current Stock (Kg)</th>
+                                    <th>Proposed Price (₹/Kg)</th>
+                                    <th>Proposed Stock (Kg)</th>
+                                    <th>Total Value (₹)</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="sendPurchaseOrder()">
+                    <i class="fas fa-paper-plane me-1"></i>Send Purchase Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSupplierId = null;
+let currentProducts = [];
+
+// Search functionality
+function searchSuppliers() {
+    const query = $('#supplier-search').val();
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', query);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+
+// Enter key search
+$('#supplier-search').on('keypress', function(e) {
+    if (e.which === 13) {
+        searchSuppliers();
+    }
+});
+
+// Load supplier products
+function loadSupplierProducts(supplierId) {
+    currentSupplierId = supplierId;
+    $('#productsModal').modal('show');
+    $('#products-loading').show();
+    $('#products-content').hide();
+    
+    $.ajax({
+        url: `/suppliers/${supplierId}/products/`,
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(data) {
+            $('#supplier-name').text(data.supplier.name);
+            currentProducts = data.products;
+            displayProducts(data.products);
+            $('#products-loading').hide();
+            $('#products-content').show();
+        },
+        error: function() {
+            alert('Error loading products. Please try again.');
+            $('#productsModal').modal('hide');
+        }
+    });
+}
+
+// Display products in table
+function displayProducts(products) {
+    const tbody = $('#products-table-body');
+    tbody.empty();
+    
+    products.forEach(function(product, index) {
+        const row = `
+            <tr>
+                <td>
+                    <input type="checkbox" class="form-check-input product-checkbox" 
+                           data-product-id="${product.id}" data-index="${index}">
+                </td>
+                <td>
+                    <strong>${product.name}</strong>
+                    <br><small class="text-muted">${product.category}</small>
+                </td>
+                <td>₹${product.current_price.toFixed(2)}</td>
+                <td>${product.current_stock}</td>
+                <td>₹${product.proposed_price.toFixed(2)}</td>
+                <td>${product.proposed_stock}</td>
+                <td class="text-success"><strong>₹${product.total_value.toFixed(2)}</strong></td>
+                <td>
+                    <input type="number" class="form-control quantity-input" 
+                           data-product-id="${product.id}" 
+                           min="1" max="${product.proposed_stock}" 
+                           value="${product.proposed_stock}" style="width: 100px;">
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// Select all products
+$('#select-all-products').on('change', function() {
+    $('.product-checkbox').prop('checked', this.checked);
+});
+
+// Send Purchase Order
+function sendPurchaseOrder() {
+    const selectedProducts = [];
+    
+    $('.product-checkbox:checked').each(function() {
+        const productId = $(this).data('product-id');
+        const quantity = $(`.quantity-input[data-product-id="${productId}"]`).val();
+        
+        if (quantity > 0) {
+            selectedProducts.push({
+                id: productId,
+                quantity: parseInt(quantity)
+            });
+        }
+    });
+    
+    if (selectedProducts.length === 0) {
+        alert('Please select at least one product.');
+        return;
+    }
+    
+    // Show loading
+    const sendButton = $('button[onclick="sendPurchaseOrder()"]');
+    const originalText = sendButton.html();
+    sendButton.html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
+    sendButton.prop('disabled', true);
+    
+    $.ajax({
+        url: '/send-po/',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify({
+            supplier_id: currentSupplierId,
+            products: selectedProducts
+        }),
+        success: function(response) {
+            if (response.success) {
+                alert(`Purchase Order ${response.po_number} sent successfully!`);
+                $('#productsModal').modal('hide');
+                location.reload();
+            } else {
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function() {
+            alert('Error sending purchase order. Please try again.');
+        },
+        complete: function() {
+            sendButton.html(originalText);
+            sendButton.prop('disabled', false);
+        }
+    });
+}
+
+// Bulk upload modal
+function showBulkUpload() {
+    window.location.href = '{% url "po_system:bulk_upload" %}';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Supplier Info Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">{{ supplier.name }}</h3>
+                            <p class="mb-0 text-muted">
+                                <i class="fas fa-user me-2"></i>{{ supplier.contact_person }}
+                                <i class="fas fa-envelope mx-2"></i>{{ supplier.email }}
+                                <i class="fas fa-phone mx-2"></i>{{ supplier.phone }}
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:supplier_search' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Suppliers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-container">
+                <div class="input-group">
+                    <span class="input-group-text bg-primary text-white">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="productSearchInput" class="form-control search-input" 
+                           placeholder="Search the Supplier name" onkeyup="filterProducts()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="product-table">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="productsTable">
+                        <thead>
+                            <tr class="text-center">
+                                <th>Product</th>
+                                <th>Current Price<br>(Per Kg)</th>
+                                <th>Current Stock<br>(in Kg)</th>
+                                <th>Proposed Price<br>(Per Kg)</th>
+                                <th>Proposed Stock<br>(in Kg)</th>
+                                <th>Total Value</th>
+                                <th>Action</th>
+                                <th>to Supplier</th>
+                                <th>to PO Department</th>
+                                <th>cc to Cat Head</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr class="text-center">
+                                <td class="text-start">{{ product.name }}</td>
+                                <td>₹{{ product.current_price }}</td>
+                                <td>{{ product.current_stock }}</td>
+                                <td>
+                                    <input type="number" class="form-control proposed-price" 
+                                           data-product-id="{{ product.id }}" 
+                                           value="{{ product.proposed_price }}" 
+                                           min="0.01" step="0.01" style="width: 120px; margin: 0 auto;">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control proposed-stock" 
+                                           data-product-id="{{ product.id }}" 
+                                           value="{{ product.proposed_stock }}" 
+                                           min="1" style="width: 120px; margin: 0 auto;">
+                                </td>
+                                <td class="total-value">₹{{ product.total_value }}</td>
+                                <td>
+                                    <button class="btn btn-primary send-po-btn" 
+                                            data-product-id="{{ product.id }}"
+                                            style="background-color: purple; border-color: purple;">
+                                        SEND PO
+                                    </button>
+                                </td>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="toSupplier{{ product.id }}" checked>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="toPODept{{ product.id }}" checked>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="toCatHead{{ product.id }}" checked>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center py-4">
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                    <h4>No products found for this supplier</h4>
+                                    <p class="text-muted">Try adding products through the bulk upload feature</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmPOModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Purchase Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to send a purchase order for:</p>
+                    <p><strong id="confirm-product-name"></strong></p>
+                    <p>Quantity: <span id="confirm-quantity"></span> Kg</p>
+                    <p>Price: ₹<span id="confirm-price"></span> per Kg</p>
+                    <p>Total Value: ₹<span id="confirm-total"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="send-po-confirm">
+                        <i class="fas fa-paper-plane me-1"></i>Send Purchase Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // CSRF token setup for AJAX
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Update total value when inputs change
+    document.querySelectorAll('.proposed-price, .proposed-stock').forEach(input => {
+        input.addEventListener('change', updateTotalValue);
+    });
+
+    function updateTotalValue(e) {
+        const productId = e.target.dataset.productId;
+        const priceInput = document.querySelector(`.proposed-price[data-product-id="${productId}"]`);
+        const stockInput = document.querySelector(`.proposed-stock[data-product-id="${productId}"]`);
+        const totalCell = priceInput.closest('tr').querySelector('.total-value');
+        
+        const price = parseFloat(priceInput.value) || 0;
+        const stock = parseInt(stockInput.value) || 0;
+        const total = price * stock;
+        
+        totalCell.textContent = `₹${total.toFixed(2)}`;
+    }
+
+    // Filter products
+    function filterProducts() {
+        const input = document.getElementById('productSearchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('productsTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+            const productNameCell = rows[i].getElementsByTagName('td')[0];
+            if (productNameCell) {
+                const productName = productNameCell.textContent || productNameCell.innerText;
+                if (productName.toUpperCase().indexOf(filter) > -1) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+    }
+
+    // Send PO button click
+    document.querySelectorAll('.send-po-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const row = this.closest('tr');
+            const productName = row.cells[0].textContent;
+            const priceInput = row.querySelector('.proposed-price');
+            const stockInput = row.querySelector('.proposed-stock');
+            
+            const price = parseFloat(priceInput.value);
+            const stock = parseInt(stockInput.value);
+            const total = price * stock;
+            
+            // Update confirmation modal
+            document.getElementById('confirm-product-name').textContent = productName;
+            document.getElementById('confirm-quantity').textContent = stock;
+            document.getElementById('confirm-price').textContent = price.toFixed(2);
+            document.getElementById('confirm-total').textContent = total.toFixed(2);
+            
+            // Store data for submission
+            document.getElementById('send-po-confirm').dataset.productId = productId;
+            document.getElementById('send-po-confirm').dataset.price = price;
+            document.getElementById('send-po-confirm').dataset.stock = stock;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('confirmPOModal'));
+            modal.show();
+        });
+    });
+
+    // Confirm send PO
+    document.getElementById('send-po-confirm').addEventListener('click', function() {
+        const productId = this.dataset.productId;
+        const price = parseFloat(this.dataset.price);
+        const quantity = parseInt(this.dataset.stock);
+        
+        // Get email recipients
+        const toSupplier = document.getElementById(`toSupplier${productId}`).checked;
+        const toPODept = document.getElementById(`toPODept${productId}`).checked;
+        const toCatHead = document.getElementById(`toCatHead${productId}`).checked;
+        
+        // Disable button and show loading
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+        
+        // Send AJAX request
+        fetch('{% url "po_system:send_po" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                supplier_id: {{ supplier.id }},
+                products: [{
+                    id: productId,
+                    quantity: quantity,
+                    unit_price: price,
+                    to_supplier: toSupplier,
+                    to_po_dept: toPODept,
+                    to_cat_head: toCatHead
+                }]
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide modal
+                bootstrap.Modal.getInstance(document.getElementById('confirmPOModal')).hide();
+                
+                // Show success message
+                alert(`Purchase Order ${data.po_number} sent successfully!`);
+                
+                // Disable the send button for this product
+                const button = document.querySelector(`.send-po-btn[data-product-id="${productId}"]`);
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-check me-1"></i>Sent';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-success');
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error sending purchase order. Please try again.');
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            // Reset button
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Purchase Order';
+        });
+    });
+</script>
+{% endblock %}

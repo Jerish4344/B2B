@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order #{{ po.po_number }}</title>
+    <style>
+        @media print {
+            body {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                font-size: 12pt;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .company-info {
+            float: left;
+        }
+        
+        .po-info {
+            float: right;
+            text-align: right;
+        }
+        
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .info-box {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .total-row {
+            font-weight: bold;
+        }
+        
+        .signature {
+            margin-top: 40px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #333;
+            width: 200px;
+            margin-top: 50px;
+            margin-bottom: 5px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            font-size: 10pt;
+            color: #666;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }
+        
+        .print-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14pt;
+            margin-bottom: 20px;
+        }
+        
+        .print-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .logo {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+        
+        .po-number {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button onclick="window.print()" class="print-button no-print">Print Purchase Order</button>
+        
+        <!-- Header -->
+        <div class="header clearfix">
+            <div class="company-info">
+                <h1>{{ company_name }}</h1>
+                <p>{{ company_email }}<br>{{ company_phone }}</p>
+            </div>
+            <div class="po-info">
+                <div class="po-number">Purchase Order #{{ po.po_number }}</div>
+                <p>Date: {{ po.created_at|date:"F d, Y" }}</p>
+                <p>Status: {{ po.get_status_display }}</p>
+            </div>
+        </div>
+        
+        <!-- Supplier & PO Information -->
+        <div class="section clearfix">
+            <div style="float: left; width: 48%;">
+                <div class="section-title">Supplier Information</div>
+                <div class="info-box">
+                    <div class="info-row">
+                        <div class="info-label">Name:</div>
+                        <div>{{ po.supplier.name }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Contact Person:</div>
+                        <div>{{ po.supplier.contact_person }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Email:</div>
+                        <div>{{ po.supplier.email }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Phone:</div>
+                        <div>{{ po.supplier.phone }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Address:</div>
+                        <div>{{ po.supplier.address }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="float: right; width: 48%;">
+                <div class="section-title">Order Details</div>
+                <div class="info-box">
+                    <div class="info-row">
+                        <div class="info-label">PO Number:</div>
+                        <div>{{ po.po_number }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Order Date:</div>
+                        <div>{{ po.created_at|date:"F d, Y" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Status:</div>
+                        <div>{{ po.get_status_display }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Created By:</div>
+                        <div>{{ po.created_by.get_full_name|default:po.created_by.username }}</div>
+                    </div>
+                    {% if po.sent_at %}
+                    <div class="info-row">
+                        <div class="info-label">Sent Date:</div>
+                        <div>{{ po.sent_at|date:"F d, Y" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div style="clear: both;"></div>
+        
+        <!-- Products Table -->
+        <div class="section">
+            <div class="section-title">Ordered Products</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 40%;">Product</th>
+                        <th style="width: 10%;">Unit</th>
+                        <th style="width: 15%;">Quantity</th>
+                        <th style="width: 15%;">Unit Price</th>
+                        <th style="width: 15%;">Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.product.unit }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ item.unit_price }}</td>
+                        <td>₹{{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="5" style="text-align: right;">Total Amount:</td>
+                        <td>₹{{ po.total_amount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Notes -->
+        <div class="section">
+            <div class="section-title">Terms & Conditions</div>
+            <div class="info-box">
+                <p>1. Please send two copies of your invoice.</p>
+                <p>2. Enter this order in accordance with the prices, terms, delivery method, and specifications listed above.</p>
+                <p>3. Please notify us immediately if you are unable to ship as specified.</p>
+                <p>4. Send all correspondence to: {{ po_department_email }}</p>
+            </div>
+        </div>
+        
+        <!-- Signatures -->
+        <div class="section clearfix">
+            <div style="float: left; width: 48%;">
+                <div class="signature">
+                    <div class="signature-line"></div>
+                    <p>Authorized by</p>
+                    <p>{{ po.created_by.get_full_name|default:po.created_by.username }}</p>
+                    <p>{{ company_name }}</p>
+                </div>
+            </div>
+            
+            <div style="float: right; width: 48%;">
+                <div class="signature">
+                    <div class="signature-line"></div>
+                    <p>Received by</p>
+                    <p>{{ po.supplier.contact_person }}</p>
+                    <p>{{ po.supplier.name }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="clear: both;"></div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; {{ po.created_at|date:"Y" }} {{ company_name }}. All rights reserved.</p>
+            <p>This is an official purchase order document.</p>
+        </div>
+    </div>
+</body>
+</html>

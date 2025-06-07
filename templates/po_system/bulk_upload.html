@@ -1,0 +1,106 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="main-content">
+            <h2 class="mb-4">
+                <i class="fas fa-upload me-2"></i>Bulk Upload Products
+            </h2>
+            
+            <form method="post" enctype="multipart/form-data" id="bulk-upload-form">
+                {% csrf_token %}
+                
+                <div class="upload-area mb-4">
+                    <i class="fas fa-cloud-upload-alt fa-4x text-muted mb-3"></i>
+                    <h4>Upload CSV File</h4>
+                    <p class="text-muted">Select a CSV file containing your product data</p>
+                    {{ form.csv_file }}
+                    <div class="form-text mt-2">
+                        {{ form.csv_file.help_text }}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-upload me-1"></i>Upload Products
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="#" class="btn btn-outline-secondary w-100" onclick="downloadTemplate()">
+                            <i class="fas fa-download me-1"></i>Download Template
+                        </a>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- CSV Format Guide -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>CSV Format Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Your CSV file should contain the following columns:</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Column Name</th>
+                                    <th>Description</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>supplier_name</td><td>Name of the supplier</td><td>ABC Suppliers</td></tr>
+                                <tr><td>supplier_email</td><td>Supplier's email</td><td>contact@abc.com</td></tr>
+                                <tr><td>supplier_phone</td><td>Supplier's phone</td><td>9876543210</td></tr>
+                                <tr><td>contact_person</td><td>Contact person name</td><td>John Doe</td></tr>
+                                <tr><td>product_name</td><td>Name of the product</td><td>Premium Peanuts</td></tr>
+                                <tr><td>category_name</td><td>Product category</td><td>Nuts</td></tr>
+                                <tr><td>category_head_email</td><td>Category head email</td><td>head@company.com</td></tr>
+                                <tr><td>category_head_name</td><td>Category head name</td><td>Jane Smith</td></tr>
+                                <tr><td>current_price</td><td>Current price per unit</td><td>120.00</td></tr>
+                                <tr><td>proposed_price</td><td>Proposed price per unit</td><td>118.00</td></tr>
+                                <tr><td>proposed_stock</td><td>Proposed stock quantity</td><td>500</td></tr>
+                                <tr><td>unit</td><td>Unit of measurement</td><td>Kg</td></tr>
+                                <tr><td>description</td><td>Product description (optional)</td><td>High quality peanuts</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function downloadTemplate() {
+    const csvContent = `supplier_name,supplier_email,supplier_phone,contact_person,product_name,category_name,category_head_email,category_head_name,current_price,proposed_price,proposed_stock,unit,description
+ABC Suppliers,abc@supplier.com,9876543210,John Doe,Premium Peanuts,Nuts,nuts.head@company.com,Jane Smith,120.00,118.00,500,Kg,High quality peanuts
+XYZ Traders,xyz@trader.com,9876543211,Mike Johnson,Cashew Premium,Nuts,nuts.head@company.com,Jane Smith,1200.00,1250.00,150,Kg,Premium cashews`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'product_upload_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// File upload preview
+$('#id_csv_file').on('change', function() {
+    const file = this.files[0];
+    if (file) {
+        $('.upload-area').removeClass('border-secondary').addClass('border-success');
+        $('.upload-area h4').text(`Selected: ${file.name}`);
+        $('.upload-area p').text(`File size: ${(file.size / 1024).toFixed(2)} KB`);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - B2B PO Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h2>Create Account</h2>
+                <p class="text-muted">Register to access B2B PO Management System</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'po_system:register' %}" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fas fa-user text-secondary"></i>
+                        </span>
+                        <input type="text" name="username" class="form-control" placeholder="Username" required>
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="text-danger">
+                            {{ form.username.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Username must be unique and contain only letters, numbers, and @/./+/-/_ characters.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fas fa-envelope text-secondary"></i>
+                        </span>
+                        <input type="email" name="email" class="form-control" placeholder="Email Address" required>
+                    </div>
+                    {% if form.email.errors %}
+                        <div class="text-danger">
+                            {{ form.email.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fas fa-lock text-secondary"></i>
+                        </span>
+                        <input type="password" name="password1" class="form-control" placeholder="Password" required>
+                    </div>
+                    {% if form.password1.errors %}
+                        <div class="text-danger">
+                            {{ form.password1.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Password must be at least 8 characters long and contain letters, numbers, and special characters.</div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="fas fa-lock text-secondary"></i>
+                        </span>
+                        <input type="password" name="password2" class="form-control" placeholder="Confirm Password" required>
+                    </div>
+                    {% if form.password2.errors %}
+                        <div class="text-danger">
+                            {{ form.password2.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </button>
+            </form>
+
+            <div class="auth-links">
+                <p>Already have an account? <a href="{% url 'po_system:login' %}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

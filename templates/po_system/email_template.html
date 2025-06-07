@@ -1,0 +1,92 @@
+!-- EMAIL TEMPLATE -->
+<script type="text/template" id="email-template">
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Order</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .po-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background-color: #f8f9fa; font-weight: bold; }
+        .total { background: #e8f5e8; font-weight: bold; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Purchase Order</h1>
+            <p>{{ company_name }}</p>
+        </div>
+        
+        <div class="content">
+            <div class="po-details">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <h3>PO Number: {{ po.po_number }}</h3>
+                        <p><strong>Date:</strong> {{ po.created_at|date:"F d, Y" }}</p>
+                        <p><strong>Created by:</strong> {{ po.created_by.get_full_name|default:po.created_by.username }}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h4>Supplier Details</h4>
+                        <p><strong>{{ po.supplier.name }}</strong></p>
+                        <p>{{ po.supplier.contact_person }}</p>
+                        <p>{{ po.supplier.email }}</p>
+                        <p>{{ po.supplier.phone }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Order Items</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Total (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.product.category.name }}</td>
+                        <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                        <td>₹{{ item.unit_price }}</td>
+                        <td>₹{{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total">
+                        <td colspan="4"><strong>Total Amount</strong></td>
+                        <td><strong>₹{{ po.total_amount }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+                <h4>Terms & Conditions</h4>
+                <ul>
+                    <li>Please confirm receipt of this purchase order</li>
+                    <li>Delivery should be made as per agreed timeline</li>
+                    <li>Quality should match the specified standards</li>
+                    <li>Invoice should reference PO Number: {{ po.po_number }}</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated email. Please do not reply to this email.</p>
+            <p>For any queries, please contact our procurement department.</p>
+        </div>
+    </div>
+</body>
+</html>
+</script>
