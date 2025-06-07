@@ -40,11 +40,16 @@ INSTALLED_APPS = [
     'po_system',
 ]
 
-# Zepto Mail Configuration
-ZEPTO_API_KEY = 'your_zepto_api_key'
-ZEPTO_FROM_EMAIL = 'noreply@yourcompany.com'
-ZEPTO_FROM_NAME = 'Your Company Name'
-PO_DEPARTMENT_EMAIL = 'po@yourcompany.com'
+# Email Configuration using SMTP
+# Zepto Mail API Configuration (instead of SMTP)
+ZEPTO_API_KEY = 'PHtE6r0PFuvsijYvoxIG5KLrRJalY9soruIzLQhA4o1GWKNWSU1cr48ow2WzqBwjUvETQPXOy44+tLqZs+uGJmnkNmkeVGqyqK3sx/VYSPOZsbq6x00Vs14bdk3eUoXtd9Jr1SDQvt7ZNA=='
+ZEPTO_FROM_EMAIL = 'noreply@jeyarama.com'
+ZEPTO_FROM_NAME = 'Jeyarama Company'
+PO_DEPARTMENT_EMAIL = 'anubha@jeyarama.com'
+
+# Company settings
+COMPANY_NAME = 'Jeyarama Company'
+COMPANY_PHONE = '+91 9944406089'
 
 
 MIDDLEWARE = [
@@ -83,8 +88,12 @@ WSGI_APPLICATION = 'po_management.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mysql.connector.django',
+        'NAME': 'po_db',
+        'USER': 'root',
+        'PASSWORD': 'root@2001',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 

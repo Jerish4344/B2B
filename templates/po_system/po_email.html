@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Purchase Order {{ po.po_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .po-details { background-color: #f8f9fa; padding: 15px; margin: 20px 0; }
+        .footer { background-color: #e9ecef; padding: 15px; text-align: center; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>Purchase Order: {{ po.po_number }}</h2>
+    </div>
+    
+    <div class="content">
+        <p>Dear {{ po.supplier.name }},</p>
+        
+        <p>Please find the details of our purchase order below:</p>
+        
+        <div class="po-details">
+            <p><strong>PO Number:</strong> {{ po.po_number }}</p>
+            <p><strong>Date:</strong> {{ po.created_at|date:"F d, Y" }}</p>
+            <p><strong>Supplier:</strong> {{ po.supplier.name }}</p>
+            <p><strong>Total Amount:</strong> ${{ po.total_amount }}</p>
+            <p><strong>Status:</strong> {{ po.get_status_display }}</p>
+        </div>
+        
+        {% if po.notes %}
+        <p><strong>Notes:</strong> {{ po.notes }}</p>
+        {% endif %}
+        
+        <p>Please confirm receipt of this purchase order.</p>
+        
+        <p>Best regards,<br>{{ company_name }}</p>
+    </div>
+    
+    <div class="footer">
+        <p>{{ company_name }}</p>
+        {% if company_phone %}<p>Phone: {{ company_phone }}</p>{% endif %}
+        <p>Email: {{ po_department_email }}</p>
+    </div>
+</body>
+</html>

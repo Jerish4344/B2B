@@ -26,28 +26,109 @@
                             <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'po_system:supplier_search' %}">
-                            <i class="fas fa-search me-1"></i>Search Suppliers
+                    
+                    <!-- Purchase Orders Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-invoice me-1"></i>Purchase Orders
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'po_system:create_po' %}">
+                                <i class="fas fa-plus me-2"></i>Create New PO
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:purchase_orders' %}">
+                                <i class="fas fa-list me-2"></i>View All POs
+                            </a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'po_system:bulk_upload' %}">
-                            <i class="fas fa-upload me-1"></i>Bulk Upload
+                    
+                    <!-- Products Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-box me-1"></i>Products
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'po_system:product_create' %}">
+                                <i class="fas fa-plus me-2"></i>Add New Product
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:product_list' %}">
+                                <i class="fas fa-list me-2"></i>View All Products
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:bulk_upload' %}">
+                                <i class="fas fa-upload me-2"></i>Bulk Upload Products
+                            </a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Suppliers Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-building me-1"></i>Suppliers
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'po_system:supplier_create' %}">
+                                <i class="fas fa-plus me-2"></i>Add New Supplier
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:supplier_list' %}">
+                                <i class="fas fa-list me-2"></i>View All Suppliers
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:supplier_search' %}">
+                                <i class="fas fa-search me-2"></i>Search Suppliers
+                            </a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Management Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs me-1"></i>Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><h6 class="dropdown-header">Categories</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:category_create' %}">
+                                <i class="fas fa-plus me-2"></i>Add Category
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:category_list' %}">
+                                <i class="fas fa-tags me-2"></i>View Categories
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Shops</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:shop_create' %}">
+                                <i class="fas fa-plus me-2"></i>Add Shop
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:shop_list' %}">
+                                <i class="fas fa-store me-2"></i>View Shops
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Stock</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:stock_create' %}">
+                                <i class="fas fa-plus me-2"></i>Add Stock Entry
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:stock_list' %}">
+                                <i class="fas fa-warehouse me-2"></i>View Stock
+                            </a></li>
+                        </ul>
                     </li>
                 </ul>
+                
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user me-1"></i>{{ user.username }}
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Welcome, {{ user.get_full_name|default:user.username }}!</h6></li>
                             {% if user.is_staff %}
-                            <li><a class="dropdown-item" href="/admin/"><i class="fas fa-cogs me-2"></i>Admin Panel</a></li>
+                            <li><a class="dropdown-item" href="/admin/">
+                                <i class="fas fa-cogs me-2"></i>Admin Panel
+                            </a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{% url 'po_system:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item" href="{% url 'po_system:logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
                         </ul>
                     </li>
                 </ul>
@@ -60,7 +141,7 @@
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
@@ -70,9 +151,68 @@
         {% endblock %}
     </div>
 
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-light text-center text-muted">
+        <div class="container">
+            <p class="mb-0">
+                &copy; {% now "Y" %} B2B PO Management System. 
+            </p>
+        </div>
+    </footer>
+
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
+    <!-- Global Scripts -->
+    <script>
+    // Set active navigation item
+    $(document).ready(function() {
+        const currentPath = window.location.pathname;
+        $('.navbar-nav .nav-link').each(function() {
+            if ($(this).attr('href') === currentPath) {
+                $(this).addClass('active');
+                $(this).closest('.dropdown').find('.dropdown-toggle').addClass('active');
+            }
+        });
+        
+        // Also check dropdown items
+        $('.dropdown-item').each(function() {
+            if ($(this).attr('href') === currentPath) {
+                $(this).addClass('active');
+                $(this).closest('.dropdown').find('.dropdown-toggle').addClass('active');
+            }
+        });
+    });
+    
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+    
+    // Confirm delete actions
+    $('a[href*="delete"]').on('click', function(e) {
+        if (!confirm('Are you sure you want to delete this item?')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Loading states for buttons
+    $('form').on('submit', function() {
+        $(this).find('button[type="submit"]').each(function() {
+            const $btn = $(this);
+            const originalText = $btn.html();
+            $btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Processing...');
+            $btn.prop('disabled', true);
+            
+            // Re-enable after 5 seconds as fallback
+            setTimeout(() => {
+                $btn.html(originalText);
+                $btn.prop('disabled', false);
+            }, 5000);
+        });
+    });
+    </script>
     
     {% block extra_js %}
     {% endblock %}

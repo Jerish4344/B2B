@@ -1,0 +1,427 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-plus me-2"></i>Create New Purchase Order
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Select a supplier and choose products to create a purchase order
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'po_system:purchase_orders' %}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-list me-1"></i>View All POs
+                            </a>
+                            <a href="{% url 'po_system:supplier_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Add New Supplier
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ suppliers_count }}</h3>
+                        <p class="mb-0">Active Suppliers</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-building fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ products_count }}</h3>
+                        <p class="mb-0">Available Products</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-box fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f39c12, #d35400);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ categories_count }}</h3>
+                        <p class="mb-0">Product Categories</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-tags fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3><i class="fas fa-rocket"></i></h3>
+                        <p class="mb-0">Quick Create</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-magic fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-container">
+                <h4 class="mb-3">
+                    <i class="fas fa-search me-2"></i>Find Suppliers
+                </h4>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="text" id="supplier-search" class="form-control search-input" 
+                                   placeholder="Search suppliers by name or contact person..." 
+                                   value="{{ query }}">
+                            <button class="btn btn-primary" type="button" onclick="searchSuppliers()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'po_system:bulk_upload' %}" class="btn btn-info w-100">
+                            <i class="fas fa-upload me-1"></i>Bulk Upload Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suppliers List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>Select a Supplier to Create Purchase Order
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="suppliers-container">
+                        {% for supplier in suppliers %}
+                        <div class="supplier-card" onclick="loadSupplierProducts({{ supplier.id }})">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="mb-1">
+                                        <i class="fas fa-building me-2 text-primary"></i>{{ supplier.name }}
+                                    </h5>
+                                    <p class="mb-1">
+                                        <i class="fas fa-user me-2"></i>{{ supplier.contact_person }}
+                                    </p>
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-envelope me-2"></i>{{ supplier.email }}
+                                        <i class="fas fa-phone ms-3 me-2"></i>{{ supplier.phone }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <div class="me-3">
+                                            <small class="text-muted">Products Available</small>
+                                            <div class="badge bg-info">{{ supplier.products.count }}</div>
+                                        </div>
+                                        <i class="fas fa-chevron-right fa-2x text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-building fa-4x text-muted mb-3"></i>
+                            <h4>No suppliers found</h4>
+                            <p class="text-muted">You need to add suppliers before creating purchase orders</p>
+                            <a href="{% url 'po_system:supplier_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Your First Supplier
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if suppliers.has_other_pages %}
+                    <nav aria-label="Suppliers pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if suppliers.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ suppliers.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                        Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ suppliers.number }} of {{ suppliers.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if suppliers.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ suppliers.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                        Next
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Modal (same as supplier_search.html) -->
+<div class="modal fade" id="productsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-box me-2"></i>Create Purchase Order - <span id="supplier-name"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="products-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading products...</p>
+                </div>
+                <div id="products-content" style="display: none;">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Instructions:</strong> Select the products you want to order, adjust quantities as needed, and click "Create Purchase Order" to generate the PO.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="form-check">
+                                            <input type="checkbox" id="select-all-products" class="form-check-input">
+                                            <label class="form-check-label" for="select-all-products">Select All</label>
+                                        </div>
+                                    </th>
+                                    <th>Product</th>
+                                    <th>Current Price (₹)</th>
+                                    <th>Current Stock</th>
+                                    <th>Proposed Price (₹)</th>
+                                    <th>Proposed Stock</th>
+                                    <th>Total Value (₹)</th>
+                                    <th>Order Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="createPurchaseOrder()">
+                    <i class="fas fa-file-invoice me-1"></i>Create Purchase Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSupplierId = null;
+let currentProducts = [];
+
+// Search functionality
+function searchSuppliers() {
+    const query = $('#supplier-search').val();
+    const url = new URL(window.location.href);
+    url.searchParams.set('q', query);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+}
+
+// Enter key search
+$('#supplier-search').on('keypress', function(e) {
+    if (e.which === 13) {
+        searchSuppliers();
+    }
+});
+
+// Load supplier products
+function loadSupplierProducts(supplierId) {
+    currentSupplierId = supplierId;
+    $('#productsModal').modal('show');
+    $('#products-loading').show();
+    $('#products-content').hide();
+    
+    $.ajax({
+        url: `/suppliers/${supplierId}/products/`,
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(data) {
+            $('#supplier-name').text(data.supplier.name);
+            currentProducts = data.products;
+            displayProducts(data.products);
+            $('#products-loading').hide();
+            $('#products-content').show();
+        },
+        error: function() {
+            alert('Error loading products. Please try again.');
+            $('#productsModal').modal('hide');
+        }
+    });
+}
+
+// Display products in table
+function displayProducts(products) {
+    const tbody = $('#products-table-body');
+    tbody.empty();
+    
+    if (products.length === 0) {
+        tbody.append(`
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h5>No products available</h5>
+                    <p class="text-muted">This supplier doesn't have any products yet.</p>
+                    <a href="{% url 'po_system:product_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Products
+                    </a>
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    products.forEach(function(product, index) {
+        const row = `
+            <tr>
+                <td>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input product-checkbox" 
+                               data-product-id="${product.id}" data-index="${index}">
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <strong>${product.name}</strong>
+                        <br><small class="text-muted">${product.category}</small>
+                    </div>
+                </td>
+                <td>₹${product.current_price.toFixed(2)}/${product.unit}</td>
+                <td>${product.current_stock} ${product.unit}</td>
+                <td>₹${product.proposed_price.toFixed(2)}/${product.unit}</td>
+                <td>${product.proposed_stock} ${product.unit}</td>
+                <td class="text-success"><strong>₹${product.total_value.toFixed(2)}</strong></td>
+                <td>
+                    <input type="number" class="form-control quantity-input" 
+                           data-product-id="${product.id}" 
+                           min="1" 
+                           value="10" style="width: 100px;">
+                </td>
+            </tr>
+        `;
+        tbody.append(row);
+    });
+}
+
+// Select all products
+$('#select-all-products').on('change', function() {
+    $('.product-checkbox').prop('checked', this.checked);
+});
+
+// Create Purchase Order
+function createPurchaseOrder() {
+    const selectedProducts = [];
+    
+    $('.product-checkbox:checked').each(function() {
+        const productId = $(this).data('product-id');
+        const quantity = $(`.quantity-input[data-product-id="${productId}"]`).val();
+        
+        if (quantity > 0) {
+            selectedProducts.push({
+                id: productId,
+                quantity: parseInt(quantity)
+            });
+        }
+    });
+    
+    if (selectedProducts.length === 0) {
+        alert('Please select at least one product.');
+        return;
+    }
+    
+    // Show loading
+    const createButton = $('button[onclick="createPurchaseOrder()"]');
+    const originalText = createButton.html();
+    createButton.html('<i class="fas fa-spinner fa-spin me-1"></i>Creating PO...');
+    createButton.prop('disabled', true);
+    
+    $.ajax({
+        url: '/send-po/',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify({
+            supplier_id: currentSupplierId,
+            products: selectedProducts
+        }),
+        success: function(response) {
+            if (response.success) {
+                alert(`Purchase Order ${response.po_number} created successfully!`);
+                $('#productsModal').modal('hide');
+                // Redirect to PO details or list
+                window.location.href = '{% url "po_system:purchase_orders" %}';
+            } else {
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function() {
+            alert('Error creating purchase order. Please try again.');
+        },
+        complete: function() {
+            createButton.html(originalText);
+            createButton.prop('disabled', false);
+        }
+    });
+}
+
+// CSRF token setup
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            xhr.setRequestHeader("X-CSRFToken", $('[name=csrfmiddlewaretoken]').val());
+        }
+    }
+});
+</script>
+{% endblock %}

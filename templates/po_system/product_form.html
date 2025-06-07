@@ -1,0 +1,389 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-box me-2"></i>{{ title }}
+                            </h2>
+                            <p class="text-muted mb-0">
+                                {% if product %}
+                                    Update information for existing product
+                                {% else %}
+                                    Add a new product to the system
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:product_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Product Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier *</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.supplier.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <a href="{% url 'po_system:supplier_create' %}" target="_blank">Add new supplier</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.category.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <a href="{% url 'po_system:category_create' %}" target="_blank">Add new category</a>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.unit.id_for_label }}" class="form-label">Unit of Measurement *</label>
+                                {{ form.unit }}
+                                {% if form.unit.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.unit.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">e.g., Kg, Liter, Pieces, etc.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.current_price.id_for_label }}" class="form-label">Current Price (₹) *</label>
+                                {{ form.current_price }}
+                                {% if form.current_price.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.current_price.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.proposed_price.id_for_label }}" class="form-label">Proposed Price (₹) *</label>
+                                {{ form.proposed_price }}
+                                {% if form.proposed_price.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.proposed_price.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.proposed_stock.id_for_label }}" class="form-label">Proposed Stock Quantity *</label>
+                                {{ form.proposed_stock }}
+                                {% if form.proposed_stock.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.proposed_stock.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Active Product
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'po_system:product_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>{{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Modals -->
+<!-- Add Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Add Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quick-supplier-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Supplier Name *</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone *</label>
+                        <input type="text" name="phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Person *</label>
+                        <input type="text" name="contact_person" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuickSupplier()">Add Supplier</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quick-category-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Category Name *</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Head Name *</label>
+                        <input type="text" name="head_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Head Email *</label>
+                        <input type="email" name="head_email" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuickCategory()">Add Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSRF token setup
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Quick add supplier
+function showAddSupplierModal() {
+    $('#addSupplierModal').modal('show');
+}
+
+function showAddCategoryModal() {
+    $('#addCategoryModal').modal('show');
+}
+
+function saveQuickSupplier() {
+    const formData = new FormData(document.getElementById('quick-supplier-form'));
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+    button.disabled = true;
+    
+    fetch('{% url "po_system:supplier_create" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add to supplier dropdown
+            const select = document.getElementById('id_supplier');
+            const option = new Option(data.supplier.name, data.supplier.id, true, true);
+            select.add(option);
+            
+            // Close modal and reset form
+            bootstrap.Modal.getInstance(document.getElementById('addSupplierModal')).hide();
+            document.getElementById('quick-supplier-form').reset();
+            
+            alert('Supplier added successfully!');
+        } else {
+            alert('Error adding supplier: ' + (data.error || 'Please check your input'));
+        }
+    })
+    .catch(error => {
+        alert('Error adding supplier. Please try again.');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+// Quick add category
+function saveQuickCategory() {
+    const formData = new FormData(document.getElementById('quick-category-form'));
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+    button.disabled = true;
+    
+    fetch('{% url "po_system:category_create" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add to category dropdown
+            const select = document.getElementById('id_category');
+            const option = new Option(data.category.name, data.category.id, true, true);
+            select.add(option);
+            
+            // Close modal and reset form
+            bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+            document.getElementById('quick-category-form').reset();
+            
+            alert('Category added successfully!');
+        } else {
+            alert('Error adding category: ' + (data.error || 'Please check your input'));
+        }
+    })
+    .catch(error => {
+        alert('Error adding category. Please try again.');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+// Auto-calculate total value
+document.addEventListener('DOMContentLoaded', function() {
+    const priceInput = document.getElementById('id_proposed_price');
+    const stockInput = document.getElementById('id_proposed_stock');
+    
+    function updateTotalValue() {
+        const price = parseFloat(priceInput.value) || 0;
+        const stock = parseInt(stockInput.value) || 0;
+        const total = price * stock;
+        
+        // You can add a total value display element here if needed
+        console.log('Total Value:', total.toFixed(2));
+    }
+    
+    if (priceInput && stockInput) {
+        priceInput.addEventListener('input', updateTotalValue);
+        stockInput.addEventListener('input', updateTotalValue);
+    }
+});
+</script>
+{% endblock %}

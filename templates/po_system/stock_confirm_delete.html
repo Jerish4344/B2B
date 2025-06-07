@@ -1,0 +1,98 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-trash me-2"></i>Delete Stock Entry
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Confirm deletion of stock entry for "{{ stock.product.name }}" at "{{ stock.shop.name }}"
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:stock_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Stock
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <h4>Warning: This action cannot be undone</h4>
+                            <p>
+                                You are about to permanently delete the stock entry for 
+                                <strong>"{{ stock.product.name }}"</strong> at <strong>"{{ stock.shop.name }}"</strong>.
+                                This will remove all quantity tracking for this product at this location.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Stock Entry Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Product:</strong> {{ stock.product.name }}</p>
+                                    <p><strong>Supplier:</strong> {{ stock.product.supplier.name }}</p>
+                                    <p><strong>Category:</strong> {{ stock.product.category.name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Shop:</strong> {{ stock.shop.name }}</p>
+                                    <p><strong>Location:</strong> {{ stock.shop.location }}</p>
+                                    <p><strong>Current Quantity:</strong> 
+                                        <span class="badge bg-info fs-6">{{ stock.quantity }} {{ stock.product.unit }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <p><strong>Last Updated:</strong> {{ stock.updated_at|date:"F d, Y H:i" }}</p>
+                                    <p><strong>Manager:</strong> {{ stock.shop.manager_name }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Alternative:</strong> Instead of deleting, you could update the quantity to 0 
+                        to indicate the product is out of stock at this location.
+                        <a href="{% url 'po_system:stock_edit' stock.id %}" class="btn btn-sm btn-outline-primary ms-2">
+                            <i class="fas fa-edit me-1"></i>Edit Instead
+                        </a>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'po_system:stock_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>Delete Stock Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

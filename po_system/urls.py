@@ -18,6 +18,8 @@ urlpatterns = [
     
     # Purchase Order URLs
     path('purchase-orders/', views.purchase_orders, name='purchase_orders'),
+    path('create-po/', views.create_po, name='create_po'),
+    path('po/<int:po_id>/confirm/', views.confirm_po, name='confirm_po'),
     path('po/<int:po_id>/', views.po_detail, name='po_detail'),
     path('po/<int:po_id>/print/', views.print_po, name='print_po'),
     path('po/<int:po_id>/send/', views.send_po_email_view, name='send_po_email'),

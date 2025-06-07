@@ -447,26 +447,48 @@ def send_po_email_view(request, po_id):
             
             # Don't allow sending cancelled POs
             if po.status == 'cancelled':
-                return JsonResponse({'success': False, 'error': 'Cannot send a cancelled purchase order'})
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Cannot send a cancelled purchase order'
+                })
             
-            # Send email
-            email_sent = send_po_email(po)
+            # Email options - send to all recipients by default
+            email_options = {
+                'to_supplier': True,
+                'to_po_dept': True,
+                'to_cat_head': True
+            }
+            
+            # Send email using Zepto Mail
+            email_sent = send_po_email(po, email_options)
             
             if email_sent:
-                # Update status to sent
+                # Update status to sent if it was draft
                 if po.status == 'draft':
                     po.status = 'sent'
                     po.sent_at = timezone.now()
                     po.save()
                 
-                return JsonResponse({'success': True, 'message': f'Purchase Order {po.po_number} sent successfully!'})
+                return JsonResponse({
+                    'success': True, 
+                    'message': f'Purchase Order {po.po_number} sent successfully to {po.supplier.name}!'
+                })
             else:
-                return JsonResponse({'success': False, 'error': 'Failed to send email. Please try again.'})
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Failed to send email. Please check your Zepto Mail configuration and try again.'
+                })
                 
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            return JsonResponse({
+                'success': False, 
+                'error': f'Unexpected error: {str(e)}'
+            })
     
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    return JsonResponse({
+        'success': False, 
+        'error': 'Invalid request method'
+    })
 
 @login_required
 @csrf_exempt
@@ -537,8 +559,26 @@ def supplier_create(request):
         form = SupplierForm(request.POST)
         if form.is_valid():
             supplier = form.save()
+            
+            # Handle AJAX requests for quick add
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'supplier': {
+                        'id': supplier.id,
+                        'name': supplier.name
+                    }
+                })
+            
             messages.success(request, f'Supplier "{supplier.name}" created successfully!')
             return redirect('po_system:supplier_list')
+        else:
+            # Handle AJAX errors
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Please check the form data and try again.'
+                })
     else:
         form = SupplierForm()
     
@@ -631,8 +671,26 @@ def category_create(request):
         form = CategoryForm(request.POST)
         if form.is_valid():
             category = form.save()
+            
+            # Handle AJAX requests for quick add
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'category': {
+                        'id': category.id,
+                        'name': category.name
+                    }
+                })
+            
             messages.success(request, f'Category "{category.name}" created successfully!')
             return redirect('po_system:category_list')
+        else:
+            # Handle AJAX errors
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Please check the form data and try again.'
+                })
     else:
         form = CategoryForm()
     
@@ -1027,4 +1085,71 @@ def stock_delete(request, stock_id):
     
     return render(request, 'po_system/stock_confirm_delete.html', {
         'stock': stock
+    })
+
+@login_required
+def create_po(request):
+    """Create new purchase order page"""
+    query = request.GET.get('q', '')
+    suppliers = Supplier.objects.filter(is_active=True)
+    
+    if query:
+        suppliers = suppliers.filter(
+            Q(name__icontains=query) | 
+            Q(contact_person__icontains=query)
+        )
+    
+    paginator = Paginator(suppliers, 10)
+    page = request.GET.get('page', 1)
+    suppliers_page = paginator.get_page(page)
+    
+    # Get counts for stats
+    suppliers_count = Supplier.objects.filter(is_active=True).count()
+    products_count = Product.objects.filter(is_active=True).count()
+    categories_count = Category.objects.count()
+    
+    context = {
+        'suppliers': suppliers_page,
+        'query': query,
+        'suppliers_count': suppliers_count,
+        'products_count': products_count,
+        'categories_count': categories_count,
+    }
+    
+    return render(request, 'po_system/create_po.html', context)
+
+
+@login_required
+@csrf_exempt
+def confirm_po(request, po_id):
+    """Confirm a purchase order"""
+    if request.method == 'POST':
+        try:
+            po = get_object_or_404(PurchaseOrder, id=po_id)
+            
+            # Only allow confirming sent POs
+            if po.status != 'sent':
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Cannot confirm a purchase order with status: {po.get_status_display()}'
+                })
+            
+            # Update status to confirmed
+            po.status = 'confirmed'
+            po.save()
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Purchase Order {po.po_number} confirmed successfully!'
+            })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': str(e)
+            })
+    
+    return JsonResponse({
+        'success': False, 
+        'error': 'Invalid request method'
     })

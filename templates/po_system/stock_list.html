@@ -1,0 +1,386 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-warehouse me-2"></i>Stock Management
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Monitor and manage product stock levels across all shops
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:stock_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add Stock Entry
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ total_count }}</h3>
+                        <p class="mb-0">Stock Entries</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-warehouse fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ stocks.count }}</h3>
+                        <p class="mb-0">Current Page</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-list fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f39c12, #d35400);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ shops.count }}</h3>
+                        <p class="mb-0">Active Shops</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-store fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3><i class="fas fa-chart-line"></i></h3>
+                        <p class="mb-0">Inventory Tracking</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-analytics fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-container">
+                <form method="get" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Search Products</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" name="q" class="form-control search-input" 
+                                       placeholder="Search by product name, shop, or supplier..." 
+                                       value="{{ query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    Search
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Filter by Shop</label>
+                            <select name="shop" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Shops</option>
+                                {% for shop in shops %}
+                                <option value="{{ shop.id }}" {% if request.GET.shop|add:"0" == shop.id %}selected{% endif %}>
+                                    {{ shop.name }} - {{ shop.location }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Actions</label>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'po_system:stock_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo me-1"></i>Reset
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Supplier</th>
+                                    <th>Shop</th>
+                                    <th>Location</th>
+                                    <th>Current Stock</th>
+                                    <th>Unit</th>
+                                    <th>Last Updated</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in stocks %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ stock.product.name }}</strong>
+                                        <br><small class="text-muted">{{ stock.product.category.name }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'po_system:supplier_products' stock.product.supplier.id %}">
+                                            {{ stock.product.supplier.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <strong>{{ stock.shop.name }}</strong>
+                                        <br><small class="text-muted">Manager: {{ stock.shop.manager_name }}</small>
+                                    </td>
+                                    <td>{{ stock.shop.location }}</td>
+                                    <td>
+                                        {% if stock.quantity == 0 %}
+                                        <span class="badge bg-danger fs-6">{{ stock.quantity }}</span>
+                                        {% elif stock.quantity <= 10 %}
+                                        <span class="badge bg-warning fs-6">{{ stock.quantity }}</span>
+                                        {% else %}
+                                        <span class="badge bg-success fs-6">{{ stock.quantity }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ stock.product.unit }}</td>
+                                    <td>
+                                        {{ stock.updated_at|date:"M d, Y" }}
+                                        <br><small class="text-muted">{{ stock.updated_at|time:"H:i" }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-primary" onclick="viewStock({{ stock.id }})" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="{% url 'po_system:stock_edit' stock.id %}" class="btn btn-sm btn-info" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'po_system:stock_delete' stock.id %}" class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-warehouse fa-3x text-muted mb-3"></i>
+                                        <h4>No stock entries found</h4>
+                                        <p class="text-muted">Try adjusting your search criteria or add a new stock entry</p>
+                                        <a href="{% url 'po_system:stock_create' %}" class="btn btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Add Your First Stock Entry
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if stocks.has_other_pages %}
+    <nav aria-label="Stock pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if stocks.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ stocks.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ stocks.number }} of {{ stocks.paginator.num_pages }}</span>
+            </li>
+            
+            {% if stocks.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ stocks.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Stock Details Modal -->
+<div class="modal fade" id="stockDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-warehouse me-2"></i>Stock Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="stock-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading stock details...</p>
+                </div>
+                <div id="stock-content" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Product Information</h5>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Name:</th>
+                                            <td id="modal-product-name"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Supplier:</th>
+                                            <td id="modal-supplier-name"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Category:</th>
+                                            <td id="modal-category-name"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Unit:</th>
+                                            <td id="modal-product-unit"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Stock Information</h5>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Shop:</th>
+                                            <td id="modal-shop-name"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Location:</th>
+                                            <td id="modal-shop-location"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Manager:</th>
+                                            <td id="modal-shop-manager"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Current Stock:</th>
+                                            <td id="modal-stock-quantity"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Updated:</th>
+                                            <td id="modal-last-updated"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" id="edit-stock-btn">
+                    <i class="fas fa-edit me-1"></i>Edit Stock
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View stock details (placeholder function)
+function viewStock(stockId) {
+    $('#stockDetailsModal').modal('show');
+    $('#stock-loading').show();
+    $('#stock-content').hide();
+    
+    // For now, we'll show a placeholder message
+    // You can implement an AJAX endpoint later for full details
+    setTimeout(() => {
+        $('#stock-content').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Stock details view is not yet implemented. 
+                <a href="{% url 'po_system:stock_edit' 0 %}".replace('0', stockId)>Edit this stock entry</a> instead.
+            </div>
+        `);
+        $('#stock-loading').hide();
+        $('#stock-content').show();
+        $('#edit-stock-btn').data('stock-id', stockId);
+    }, 500);
+}
+
+// Edit stock button
+$('#edit-stock-btn').on('click', function() {
+    const stockId = $(this).data('stock-id');
+    window.location.href = `{% url 'po_system:stock_edit' 0 %}`.replace('0', stockId);
+});
+
+// Search on Enter key
+$('input[name="q"]').on('keypress', function(e) {
+    if (e.which === 13) {
+        $('#filter-form').submit();
+    }
+});
+
+// Auto-submit form on dropdown change
+$('.form-select').on('change', function() {
+    if ($(this).attr('onchange')) {
+        // Skip if already has onchange
+        return;
+    }
+    $('#filter-form').submit();
+});
+
+// Color-code stock levels in real-time
+$(document).ready(function() {
+    $('.badge').each(function() {
+        const quantity = parseInt($(this).text());
+        if (quantity === 0) {
+            $(this).removeClass('bg-warning bg-success').addClass('bg-danger');
+        } else if (quantity <= 10) {
+            $(this).removeClass('bg-danger bg-success').addClass('bg-warning');
+        } else {
+            $(this).removeClass('bg-danger bg-warning').addClass('bg-success');
+        }
+    });
+});
+</script>
+{% endblock %}

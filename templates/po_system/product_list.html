@@ -1,0 +1,334 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-box me-2"></i>Products
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Manage all products in the system
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'po_system:product_create' %}" class="btn btn-primary me-2">
+                                <i class="fas fa-plus me-1"></i>Add New Product
+                            </a>
+                            <a href="{% url 'po_system:bulk_upload' %}" class="btn btn-success">
+                                <i class="fas fa-upload me-1"></i>Bulk Upload
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ total_count }}</h3>
+                        <p class="mb-0">Total Products</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-box fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ active_count }}</h3>
+                        <p class="mb-0">Active Products</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ inactive_count }}</h3>
+                        <p class="mb-0">Inactive Products</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-times-circle fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ suppliers.count }}</h3>
+                        <p class="mb-0">Suppliers</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-building fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-container">
+                <form method="get" id="filter-form">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Search Products</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" name="q" class="form-control search-input" 
+                                       placeholder="Search by product name..." 
+                                       value="{{ query }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Supplier</label>
+                            <select name="supplier" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Suppliers</option>
+                                {% for supplier in suppliers %}
+                                <option value="{{ supplier.id }}" {% if request.GET.supplier|add:"0" == supplier.id %}selected{% endif %}>
+                                    {{ supplier.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.GET.category|add:"0" == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="is_active" class="form-select" onchange="this.form.submit()">
+                                <option value="all" {% if is_active == 'all' %}selected{% endif %}>All Products</option>
+                                <option value="active" {% if is_active == 'active' %}selected{% endif %}>Active Products</option>
+                                <option value="inactive" {% if is_active == 'inactive' %}selected{% endif %}>Inactive Products</option>
+                            </select>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Apply Filters
+                            </button>
+                            <a href="{% url 'po_system:product_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo me-1"></i>Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Supplier</th>
+                                    <th>Category</th>
+                                    <th>Current Price</th>
+                                    <th>Proposed Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ product.name }}</strong>
+                                        <br><small class="text-muted">{{ product.unit }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'po_system:supplier_products' product.supplier.id %}">
+                                            {{ product.supplier.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ product.category.name }}</td>
+                                    <td>₹{{ product.current_price }}/{{ product.unit }}</td>
+                                    <td>₹{{ product.proposed_price }}/{{ product.unit }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ product.current_stock }} {{ product.unit }}</span>
+                                        <br><small class="text-muted">Proposed: {{ product.proposed_stock }}</small>
+                                    </td>
+                                    <td>
+                                        {% if product.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-primary" onclick="viewProduct({{ product.id }})" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="{% url 'po_system:product_edit' product.id %}" class="btn btn-sm btn-info" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'po_system:product_delete' product.id %}" class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                                        <h4>No products found</h4>
+                                        <p class="text-muted">Try adjusting your search criteria or add a new product</p>
+                                        <a href="{% url 'po_system:product_create' %}" class="btn btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Add Your First Product
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+    <nav aria-label="Products pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if products.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ products.number }} of {{ products.paginator.num_pages }}</span>
+            </li>
+            
+            {% if products.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-box me-2"></i>Product Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="product-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading product details...</p>
+                </div>
+                <div id="product-content" style="display: none;">
+                    <!-- Product details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" id="edit-product-btn">
+                    <i class="fas fa-edit me-1"></i>Edit Product
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View product details
+function viewProduct(productId) {
+    $('#productDetailsModal').modal('show');
+    $('#product-loading').show();
+    $('#product-content').hide();
+    
+    // For now, we'll create a simple details view
+    // You can implement an AJAX endpoint later for full details
+    setTimeout(() => {
+        $('#product-content').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Product details view is not yet implemented. 
+                <a href="/admin/po_system/product/${productId}/change/" target="_blank">View in admin</a> or 
+                <a href="{% url 'po_system:product_edit' 0 %}".replace('0', productId)>edit this product</a>.
+            </div>
+        `);
+        $('#product-loading').hide();
+        $('#product-content').show();
+        $('#edit-product-btn').data('product-id', productId);
+    }, 500);
+}
+
+// Edit product button
+$('#edit-product-btn').on('click', function() {
+    const productId = $(this).data('product-id');
+    window.location.href = `{% url 'po_system:product_edit' 0 %}`.replace('0', productId);
+});
+
+// Auto-submit form on dropdown change
+$('.form-select').on('change', function() {
+    if ($(this).attr('onchange')) {
+        // Skip if already has onchange
+        return;
+    }
+    $('#filter-form').submit();
+});
+
+// Search on Enter key
+$('input[name="q"]').on('keypress', function(e) {
+    if (e.which === 13) {
+        $('#filter-form').submit();
+    }
+});
+</script>
+{% endblock %}

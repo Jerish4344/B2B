@@ -18,8 +18,8 @@
                             <a href="{% url 'po_system:supplier_search' %}" class="btn btn-primary me-2">
                                 <i class="fas fa-search me-1"></i>Search Suppliers
                             </a>
-                            <a href="{% url 'po_system:bulk_upload' %}" class="btn btn-success">
-                                <i class="fas fa-upload me-1"></i>Bulk Upload
+                            <a href="{% url 'po_system:product_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Add Product
                             </a>
                         </div>
                     </div>
@@ -30,7 +30,7 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="stats-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -42,13 +42,13 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <a href="{% url 'po_system:supplier_search' %}" class="text-white">
-                        <i class="fas fa-arrow-right me-1"></i>View All Suppliers
+                    <a href="{% url 'po_system:supplier_list' %}" class="text-white">
+                        <i class="fas fa-arrow-right me-1"></i>Manage Suppliers
                     </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="stats-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -60,13 +60,13 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <a href="{% url 'po_system:supplier_search' %}" class="text-white">
-                        <i class="fas fa-arrow-right me-1"></i>Browse Products
+                    <a href="{% url 'po_system:product_list' %}" class="text-white">
+                        <i class="fas fa-arrow-right me-1"></i>Manage Products
                     </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="stats-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -84,39 +84,57 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f39c12, #d35400);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>{{ po_status.draft_count|default:0 }}</h3>
+                        <p class="mb-0">Draft POs</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-edit fa-3x opacity-50"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'po_system:purchase_orders' %}?status=draft" class="text-white">
+                        <i class="fas fa-arrow-right me-1"></i>Review Drafts
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Quick Links Section -->
+    <!-- Quick Actions Section -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-link me-2"></i>Quick Links</h5>
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <a href="{% url 'po_system:supplier_search' %}" class="btn btn-outline-primary w-100 py-3">
-                                <i class="fas fa-search fa-2x mb-2"></i>
-                                <div>Search Suppliers</div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{% url 'po_system:bulk_upload' %}" class="btn btn-outline-success w-100 py-3">
-                                <i class="fas fa-upload fa-2x mb-2"></i>
-                                <div>Bulk Upload</div>
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="/admin/po_system/product/add/" class="btn btn-outline-info w-100 py-3">
+                            <a href="{% url 'po_system:product_create' %}" class="btn btn-outline-primary w-100 py-3">
                                 <i class="fas fa-plus fa-2x mb-2"></i>
                                 <div>Add New Product</div>
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="/admin/po_system/supplier/add/" class="btn btn-outline-secondary w-100 py-3">
-                                <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <a href="{% url 'po_system:supplier_create' %}" class="btn btn-outline-success w-100 py-3">
+                                <i class="fas fa-building fa-2x mb-2"></i>
                                 <div>Add New Supplier</div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'po_system:category_create' %}" class="btn btn-outline-info w-100 py-3">
+                                <i class="fas fa-tags fa-2x mb-2"></i>
+                                <div>Add Category</div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'po_system:bulk_upload' %}" class="btn btn-outline-warning w-100 py-3">
+                                <i class="fas fa-upload fa-2x mb-2"></i>
+                                <div>Bulk Upload</div>
                             </a>
                         </div>
                     </div>
@@ -125,67 +143,365 @@
         </div>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Main Content Row -->
     <div class="row">
+        <!-- System Overview -->
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>System Overview</h5>
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>System Overview</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
-                        <h6 class="fw-bold">Purchase Order Status</h6>
-                        <div class="progress mb-2" style="height: 20px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ po_status.confirmed_percent|default:'0' }}%;" 
-                                 aria-valuenow="{{ po_status.confirmed_percent|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
-                                 Confirmed ({{ po_status.confirmed_percent|default:'0' }}%)
+                        <h6 class="fw-bold">Purchase Order Status Distribution</h6>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ po_status.confirmed_percent|default:'0' }}%;" 
+                                 title="Confirmed: {{ po_status.confirmed_count|default:0 }} POs">
+                                 {% if po_status.confirmed_percent > 15 %}Confirmed ({{ po_status.confirmed_percent|default:'0' }}%){% endif %}
                             </div>
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ po_status.sent_percent|default:'0' }}%;" 
-                                 aria-valuenow="{{ po_status.sent_percent|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
-                                 Sent ({{ po_status.sent_percent|default:'0' }}%)
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                                 style="width: {{ po_status.sent_percent|default:'0' }}%;"
+                                 title="Sent: {{ po_status.sent_count|default:0 }} POs">
+                                 {% if po_status.sent_percent > 15 %}Sent ({{ po_status.sent_percent|default:'0' }}%){% endif %}
                             </div>
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ po_status.draft_percent|default:'0' }}%;" 
-                                 aria-valuenow="{{ po_status.draft_percent|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
-                                 Draft ({{ po_status.draft_percent|default:'0' }}%)
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {{ po_status.draft_percent|default:'0' }}%;"
+                                 title="Draft: {{ po_status.draft_count|default:0 }} POs">
+                                 {% if po_status.draft_percent > 15 %}Draft ({{ po_status.draft_percent|default:'0' }}%){% endif %}
+                            </div>
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: {{ po_status.cancelled_percent|default:'0' }}%;"
+                                 title="Cancelled: {{ po_status.cancelled_count|default:0 }} POs">
+                                 {% if po_status.cancelled_percent > 15 %}Cancelled ({{ po_status.cancelled_percent|default:'0' }}%){% endif %}
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="text-success">
+                                    <strong>{{ po_status.confirmed_count|default:0 }}</strong>
+                                    <br><small>Confirmed</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-primary">
+                                    <strong>{{ po_status.sent_count|default:0 }}</strong>
+                                    <br><small>Sent</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-warning">
+                                    <strong>{{ po_status.draft_count|default:0 }}</strong>
+                                    <br><small>Draft</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-danger">
+                                    <strong>{{ po_status.cancelled_count|default:0 }}</strong>
+                                    <br><small>Cancelled</small>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <h6 class="fw-bold">System Information</h6>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>Welcome to the B2B PO Management System
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="fw-bold">Quick Statistics</h6>
+                            <div class="alert alert-info mb-0">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted">Total Suppliers:</small>
+                                        <div class="fw-bold">{{ suppliers_count }}</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Total Products:</small>
+                                        <div class="fw-bold">{{ products_count }}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <a href="{% url 'po_system:purchase_orders' %}" class="btn btn-sm btn-outline-primary">Manage Purchase Orders</a>
                     </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'po_system:purchase_orders' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-chart-bar me-1"></i>View Detailed Reports
+                    </a>
                 </div>
             </div>
         </div>
+        
+        <!-- Recent Purchase Orders -->
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Recent Purchase Orders</h5>
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Purchase Orders</h5>
                 </div>
                 <div class="card-body">
-                    <div class="list-group">
-                        {% for po in recent_purchase_orders %}
-                        <div class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ po.po_number }}</h6>
-                                <small>{{ po.created_at|timesince }} ago</small>
+                    {% if recent_purchase_orders %}
+                        <div class="list-group list-group-flush">
+                            {% for po in recent_purchase_orders %}
+                            <div class="list-group-item list-group-item-action border-0 px-0">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <strong>{{ po.po_number }}</strong>
+                                            {% if po.status == 'draft' %}
+                                                <span class="badge bg-warning text-dark ms-2">
+                                                    <i class="fas fa-edit me-1"></i>Draft
+                                                </span>
+                                            {% elif po.status == 'sent' %}
+                                                <span class="badge bg-primary ms-2">
+                                                    <i class="fas fa-paper-plane me-1"></i>Sent
+                                                </span>
+                                            {% elif po.status == 'confirmed' %}
+                                                <span class="badge bg-success ms-2">
+                                                    <i class="fas fa-check-circle me-1"></i>Confirmed
+                                                </span>
+                                            {% elif po.status == 'cancelled' %}
+                                                <span class="badge bg-danger ms-2">
+                                                    <i class="fas fa-times-circle me-1"></i>Cancelled
+                                                </span>
+                                            {% endif %}
+                                        </h6>
+                                        <p class="mb-1 text-muted">
+                                            <i class="fas fa-building me-1"></i>{{ po.supplier.name }}
+                                        </p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-box me-1"></i>{{ po.items.count }} item{{ po.items.count|pluralize }} • 
+                                            <i class="fas fa-rupee-sign me-1"></i>{{ po.total_amount }}
+                                            {% if po.status == 'sent' and po.sent_at %}
+                                                <br><i class="fas fa-clock me-1"></i>Sent: {{ po.sent_at|date:"M d, H:i" }}
+                                            {% elif po.status == 'confirmed' %}
+                                                <br><i class="fas fa-check me-1"></i>Supplier confirmed this order
+                                            {% elif po.status == 'draft' %}
+                                                <br><i class="fas fa-exclamation-triangle me-1 text-warning"></i>Ready to send
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">{{ po.created_at|timesince }} ago</small>
+                                        {% if po.status == 'draft' %}
+                                            <button class="btn btn-sm btn-outline-primary mt-1" 
+                                                    onclick="sendPOEmail({{ po.id }})">
+                                                <i class="fas fa-paper-plane me-1"></i>Send
+                                            </button>
+                                        {% elif po.status == 'sent' %}
+                                            <button class="btn btn-sm btn-outline-success mt-1" 
+                                                    onclick="confirmPO({{ po.id }})">
+                                                <i class="fas fa-check me-1"></i>Mark Confirmed
+                                            </button>
+                                        {% elif po.status == 'confirmed' %}
+                                            <span class="badge bg-success mt-1">
+                                                <i class="fas fa-thumbs-up me-1"></i>Complete
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                            <p class="mb-1">{{ po.supplier.name }} - {{ po.items.count }} product{{ po.items.count|pluralize }}</p>
-                            <small class="text-muted">Total: ₹{{ po.total_amount }}</small>
+                            {% endfor %}
                         </div>
-                        {% empty %}
+                    {% else %}
                         <div class="text-center py-4">
                             <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
-                            <p>No recent purchase orders</p>
+                            <h6>No recent purchase orders</h6>
+                            <p class="text-muted mb-3">Start by creating your first purchase order</p>
+                            <a href="{% url 'po_system:supplier_search' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Create Purchase Order
+                            </a>
                         </div>
-                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'po_system:purchase_orders' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>View All Purchase Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Shortcuts -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>System Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <a href="{% url 'po_system:supplier_list' %}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-building fa-2x mb-2"></i>
+                                    <div>Manage Suppliers</div>
+                                    <small class="text-muted">{{ suppliers_count }} suppliers</small>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <a href="{% url 'po_system:product_list' %}" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-box fa-2x mb-2"></i>
+                                    <div>Manage Products</div>
+                                    <small class="text-muted">{{ products_count }} products</small>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <a href="{% url 'po_system:category_list' %}" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-tags fa-2x mb-2"></i>
+                                    <div>Manage Categories</div>
+                                    <small class="text-muted">Product categories</small>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="text-center">
+                                <a href="{% url 'po_system:stock_list' %}" class="btn btn-outline-warning w-100">
+                                    <i class="fas fa-warehouse fa-2x mb-2"></i>
+                                    <div>Manage Stock</div>
+                                    <small class="text-muted">Inventory levels</small>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Confirm PO Modal -->
+<div class="modal fade" id="confirmPOModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Confirm Purchase Order
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Confirm Receipt:</strong> Mark this purchase order as confirmed when you receive 
+                    confirmation from the supplier or when goods are delivered.
+                </div>
+                <p>Are you sure you want to mark Purchase Order <strong id="confirm-po-number"></strong> as confirmed?</p>
+                <p class="text-muted">This action will update the status to "Confirmed" and cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirm-po-btn">
+                    <i class="fas fa-check me-1"></i>Confirm Purchase Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirm Purchase Order
+function confirmPO(poId) {
+    // Show modal
+    $('#confirmPOModal').modal('show');
+    $('#confirm-po-btn').data('po-id', poId);
+    
+    // You might want to fetch PO details via AJAX to show PO number
+    $('#confirm-po-number').text('PO-' + poId);
+}
+
+// Send PO Email
+function sendPOEmail(poId) {
+    if (confirm('Are you sure you want to send this purchase order to the supplier?')) {
+        $.ajax({
+            url: `/po/${poId}/send/`,
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('✅ Purchase order sent successfully to supplier!\n\n' + response.message);
+                    location.reload(); // Refresh to show updated status
+                } else {
+                    alert('❌ Error sending purchase order:\n' + response.error);
+                }
+            },
+            error: function() {
+                alert('❌ Error sending purchase order. Please check your internet connection and try again.');
+            }
+        });
+    }
+}
+
+// Handle confirm button click
+$('#confirm-po-btn').on('click', function() {
+    const poId = $(this).data('po-id');
+    const button = $(this);
+    const originalText = button.html();
+    
+    // Show loading
+    button.html('<i class="fas fa-spinner fa-spin me-1"></i>Confirming...');
+    button.prop('disabled', true);
+    
+    // Send AJAX request to confirm PO
+    $.ajax({
+        url: `/po/${poId}/confirm/`,
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        },
+        success: function(response) {
+            $('#confirmPOModal').modal('hide');
+            if (response.success) {
+                alert('✅ ' + response.message);
+                location.reload(); // Refresh to show updated status
+            } else {
+                alert('❌ Error: ' + response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            $('#confirmPOModal').modal('hide');
+            console.log('Error details:', xhr.responseText);
+            alert('❌ Error confirming purchase order. Please check the console for details and try again.');
+        },
+        complete: function() {
+            button.html(originalText);
+            button.prop('disabled', false);
+        }
+    });
+});
+
+// CSRF token setup
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Set up CSRF token for all AJAX requests
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            // Only send the token to relative URLs i.e. locally.
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
+});
+</script>
 {% endblock %}

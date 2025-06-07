@@ -1,0 +1,190 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-warehouse me-2"></i>{{ title }}
+                            </h2>
+                            <p class="text-muted mb-0">
+                                {% if stock %}
+                                    Update stock information for {{ stock.product.name }} at {{ stock.shop.name }}
+                                {% else %}
+                                    Add a new stock entry to the system
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:stock_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Stock
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.product.id_for_label }}" class="form-label">Product *</label>
+                                {{ form.product }}
+                                {% if form.product.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.product.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Select the product for this stock entry</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.shop.id_for_label }}" class="form-label">Shop *</label>
+                                {{ form.shop }}
+                                {% if form.shop.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.shop.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Select the shop location</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="{{ form.quantity.id_for_label }}" class="form-label">Quantity *</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.quantity.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Enter the current stock quantity</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <div class="mt-4 pt-2">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Note:</strong> If a stock entry already exists for this product and shop, 
+                                        it will be updated with the new quantity.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'po_system:stock_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>{{ submit_text }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Info Modal -->
+<div class="modal fade" id="productInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Product Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="product-info-content">
+                    <p class="text-muted">Select a product to view its details</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show product info when product is selected
+$('#id_product').on('change', function() {
+    const productId = $(this).val();
+    if (productId) {
+        // You can implement an AJAX call here to get product details
+        // For now, we'll show basic info from the option text
+        const productText = $(this).find('option:selected').text();
+        $('#product-info-content').html(`
+            <div class="alert alert-info">
+                <strong>Selected Product:</strong> ${productText}
+                <br><small>Product details and current stock levels would be shown here.</small>
+            </div>
+        `);
+    } else {
+        $('#product-info-content').html('<p class="text-muted">Select a product to view its details</p>');
+    }
+});
+
+// Show shop info when shop is selected
+$('#id_shop').on('change', function() {
+    const shopText = $(this).find('option:selected').text();
+    if (shopText && shopText !== '---------') {
+        console.log('Selected shop:', shopText);
+    }
+});
+
+// Auto-focus quantity field when both product and shop are selected
+function checkFormCompletion() {
+    const productSelected = $('#id_product').val();
+    const shopSelected = $('#id_shop').val();
+    
+    if (productSelected && shopSelected) {
+        $('#id_quantity').focus();
+    }
+}
+
+$('#id_product, #id_shop').on('change', checkFormCompletion);
+
+// Validation
+$('#id_quantity').on('input', function() {
+    const value = parseInt($(this).val());
+    if (value < 0) {
+        $(this).addClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+        $(this).after('<div class="invalid-feedback">Quantity cannot be negative</div>');
+    } else {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+    }
+});
+</script>
+{% endblock %}

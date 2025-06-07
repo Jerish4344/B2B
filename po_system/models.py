@@ -111,6 +111,9 @@ class PurchaseOrder(models.Model):
         from datetime import datetime
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         return f"{timestamp}{str(uuid.uuid4())[:8].upper()}"
+    
+    def get_status_display(self):
+        return dict(self.STATUS_CHOICES).get(self.status, self.status)
 
 class PurchaseOrderItem(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items')
