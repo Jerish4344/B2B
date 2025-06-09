@@ -1,4 +1,3 @@
-Zepto Mail API key not configured
 INFO 2025-06-07 15:31:52,858 email_backends 70745 8438488832 Connecting to smtp.zeptomail.in:587 with user emailapikey
 INFO 2025-06-07 15:31:52,955 email_backends 70745 8438488832 Starting TLS connection...
 INFO 2025-06-07 15:31:53,148 email_backends 70745 8438488832 TLS connection established

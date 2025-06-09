@@ -1,3 +1,5 @@
+# po_management/settings.py
+
 """
 Django settings for po_management project.
 
@@ -15,7 +17,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -25,11 +26,9 @@ SECRET_KEY = 'django-insecure-o2m0(l7re+j!ycgf4r9wetax5&3pe_*2lf@yueu&!70^+n7fid
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['192.168.1.8', 'localhost', '127.0.0.1']
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,17 +39,34 @@ INSTALLED_APPS = [
     'po_system',
 ]
 
-# Email Configuration using SMTP
-# Zepto Mail API Configuration (instead of SMTP)
+# Email Configuration using Zepto Mail SMTP (SSL Certificate Fix)
+EMAIL_BACKEND = 'po_system.email_backends.ZeptoMailBackend'
+EMAIL_HOST = 'smtp.zeptomail.in'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'emailapikey'
+EMAIL_HOST_PASSWORD = 'PHtE6r0PFuvsijYvoxIG5KLrRJalY9soruIzLQhA4o1GWKNWSU1cr48ow2WzqBwjUvETQPXOy44+tLqZs+uGJmnkNmkeVGqyqK3sx/VYSPOZsbq6x00Vs14bdk3eUoXtd9Jr1SDQvt7ZNA=='
+DEFAULT_FROM_EMAIL = 'noreply@jeyarama.com'
+SERVER_EMAIL = 'noreply@jeyarama.com'
+
+# SSL Certificate verification settings - THIS FIXES THE ISSUE
+EMAIL_SSL_CERTFILE = None
+EMAIL_SSL_KEYFILE = None
+
+# Zepto Mail API Configuration (backup method)
 ZEPTO_API_KEY = 'PHtE6r0PFuvsijYvoxIG5KLrRJalY9soruIzLQhA4o1GWKNWSU1cr48ow2WzqBwjUvETQPXOy44+tLqZs+uGJmnkNmkeVGqyqK3sx/VYSPOZsbq6x00Vs14bdk3eUoXtd9Jr1SDQvt7ZNA=='
 ZEPTO_FROM_EMAIL = 'noreply@jeyarama.com'
 ZEPTO_FROM_NAME = 'Jeyarama Company'
-PO_DEPARTMENT_EMAIL = 'anubha@jeyarama.com'
 
 # Company settings
 COMPANY_NAME = 'Jeyarama Company'
 COMPANY_PHONE = '+91 9944406089'
+COMPANY_EMAIL = 'info@jeyarama.com'
+PO_DEPARTMENT_EMAIL = 'anubha@jeyarama.com'
 
+# Email timeout settings
+EMAIL_TIMEOUT = 60
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -82,10 +98,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'po_management.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'mysql.connector.django',
@@ -97,10 +111,8 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -116,22 +128,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
@@ -144,7 +149,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if not DEBUG:
@@ -158,20 +162,48 @@ if not DEBUG:
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-# Logging
+# Enhanced logging for email debugging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'po_system.log',
+            'formatter': 'detailed',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'detailed',
+        },
+        'email_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'email.log',
+            'formatter': 'detailed',
         },
     },
     'loggers': {
         'po_system': {
-            'handlers': ['file'],
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'po_system.email_backends': {
+            'handlers': ['email_file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'po_system.services.email_service': {
+            'handlers': ['email_file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },

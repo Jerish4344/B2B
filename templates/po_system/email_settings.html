@@ -1,0 +1,342 @@
+{% extends 'po_system/base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-envelope me-2"></i>Email Settings
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Configure and test email functionality for Purchase Orders
+                            </p>
+                        </div>
+                        <a href="{% url 'po_system:dashboard' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Status Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="stats-card {% if smtp_available %}primary{% else %}danger{% endif %}">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>SMTP</h3>
+                        <p class="mb-0">{% if smtp_available %}Available{% else %}Not Configured{% endif %}</p>
+                    </div>
+                    <div>
+                        <i class="fas {% if smtp_available %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-3x opacity-50"></i>
+                    </div>
+                </div>
+                {% if smtp_available %}
+                <div class="mt-3">
+                    <small>Primary email method</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="stats-card {% if api_available %}success{% else %}warning{% endif %}">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3>API</h3>
+                        <p class="mb-0">{% if api_available %}Available{% else %}Not Configured{% endif %}</p>
+                    </div>
+                    <div>
+                        <i class="fas {% if api_available %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} fa-3x opacity-50"></i>
+                    </div>
+                </div>
+                {% if api_available %}
+                <div class="mt-3">
+                    <small>Backup email method</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Configuration -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Current Email Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">SMTP Settings</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="150">Host:</th>
+                                    <td>{{ email_host }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Port:</th>
+                                    <td>{{ email_port }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Use TLS:</th>
+                                    <td>
+                                        {% if email_use_tls %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Use SSL:</th>
+                                    <td>
+                                        {% if email_use_ssl %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>From Email:</th>
+                                    <td>{{ default_from_email }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Company Settings</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th width="150">Company Name:</th>
+                                    <td>{{ company_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Zepto From Email:</th>
+                                    <td>{{ zepto_from_email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>SMTP Status:</th>
+                                    <td>
+                                        {% if smtp_available %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Configured
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Not Configured
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>API Status:</th>
+                                    <td>
+                                        {% if api_available %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Configured
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Not Configured
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Email Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>Test Email Functionality
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'po_system:test_email' %}" id="test-email-form">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="test-email" class="form-label">Test Email Address *</label>
+                                <input type="email" id="test-email" name="email" class="form-control" 
+                                       placeholder="Enter email address to test" required>
+                                <div class="form-text">We'll send a test email to this address</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="test-method" class="form-label">Method</label>
+                                <select id="test-method" name="method" class="form-select">
+                                    <option value="auto">Auto (Try SMTP first)</option>
+                                    {% if smtp_available %}
+                                    <option value="smtp">SMTP Only</option>
+                                    {% endif %}
+                                    {% if api_available %}
+                                    <option value="api">API Only</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="fas fa-paper-plane me-1"></i>Send Test Email
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Guide -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Email Configuration Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="configAccordion">
+                        <!-- SMTP Configuration -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="smtpHeader">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#smtpCollapse" aria-expanded="true" aria-controls="smtpCollapse">
+                                    <i class="fas fa-server me-2"></i>SMTP Configuration (Recommended)
+                                </button>
+                            </h2>
+                            <div id="smtpCollapse" class="accordion-collapse collapse show" 
+                                 aria-labelledby="smtpHeader" data-bs-parent="#configAccordion">
+                                <div class="accordion-body">
+                                    <p>To configure SMTP with Zepto Mail, add these settings to your <code>settings.py</code>:</p>
+                                    <pre class="bg-light p-3 rounded"><code># Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.zeptomail.in'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'your-email@yourdomain.com'
+EMAIL_HOST_PASSWORD = 'your-smtp-password'
+DEFAULT_FROM_EMAIL = 'your-email@yourdomain.com'
+
+# Company settings
+COMPANY_NAME = 'Your Company Name'
+COMPANY_PHONE = '+1234567890'
+PO_DEPARTMENT_EMAIL = 'po@yourdomain.com'</code></pre>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-lightbulb me-2"></i>
+                                        <strong>Note:</strong> Replace the placeholder values with your actual Zepto Mail SMTP credentials.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- API Configuration -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="apiHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#apiCollapse" aria-expanded="false" aria-controls="apiCollapse">
+                                    <i class="fas fa-cloud me-2"></i>API Configuration (Backup)
+                                </button>
+                            </h2>
+                            <div id="apiCollapse" class="accordion-collapse collapse" 
+                                 aria-labelledby="apiHeader" data-bs-parent="#configAccordion">
+                                <div class="accordion-body">
+                                    <p>To configure the Zepto Mail API as a backup method, add these settings:</p>
+                                    <pre class="bg-light p-3 rounded"><code># Zepto Mail API Configuration
+ZEPTO_API_KEY = 'your-zepto-api-key'
+ZEPTO_FROM_EMAIL = 'your-email@yourdomain.com'
+ZEPTO_FROM_NAME = 'Your Company Name'</code></pre>
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <strong>Note:</strong> The API is used as a fallback when SMTP fails.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Troubleshooting -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="troubleshootHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#troubleshootCollapse" aria-expanded="false" aria-controls="troubleshootCollapse">
+                                    <i class="fas fa-wrench me-2"></i>Troubleshooting
+                                </button>
+                            </h2>
+                            <div id="troubleshootCollapse" class="accordion-collapse collapse" 
+                                 aria-labelledby="troubleshootHeader" data-bs-parent="#configAccordion">
+                                <div class="accordion-body">
+                                    <h6>Common Issues:</h6>
+                                    <ul>
+                                        <li><strong>Authentication Failed:</strong> Check your email and password/API key</li>
+                                        <li><strong>Connection Timeout:</strong> Verify your firewall allows outbound connections on port 587</li>
+                                        <li><strong>Invalid Email Address:</strong> Ensure the from email is verified in your Zepto Mail account</li>
+                                        <li><strong>Rate Limiting:</strong> Check your Zepto Mail sending limits</li>
+                                    </ul>
+                                    
+                                    <h6 class="mt-3">Testing Tools:</h6>
+                                    <p>You can also test your email configuration using the command line:</p>
+                                    <pre class="bg-light p-2 rounded"><code>python manage.py shell
+from po_system.services.email_service import email_service
+success, message = email_service.send_test_email('test@example.com')
+print(f"Success: {success}, Message: {message}")</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add loading state to test email form
+$('#test-email-form').on('submit', function() {
+    const submitBtn = $(this).find('button[type="submit"]');
+    const originalText = submitBtn.html();
+    
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Sending...');
+    submitBtn.prop('disabled', true);
+    
+    // Re-enable after 10 seconds as fallback
+    setTimeout(() => {
+        submitBtn.html(originalText);
+        submitBtn.prop('disabled', false);
+    }, 10000);
+});
+
+// Show appropriate test method options
+$(document).ready(function() {
+    const smtpAvailable = {{ smtp_available|yesno:"true,false" }};
+    const apiAvailable = {{ api_available|yesno:"true,false" }};
+    
+    if (!smtpAvailable && !apiAvailable) {
+        $('#test-email-form button[type="submit"]').prop('disabled', true);
+        $('#test-email-form').after('<div class="alert alert-warning mt-3"><i class="fas fa-exclamation-triangle me-2"></i>No email methods are configured. Please configure SMTP or API first.</div>');
+    }
+});
+</script>
+{% endblock %}

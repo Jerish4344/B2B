@@ -17,9 +17,11 @@ import csv
 from io import StringIO
 from decimal import Decimal
 from datetime import datetime, timedelta
+
+from po_management import settings
 from .models import *
 from .forms import *
-from .utils import send_po_email
+from .services.email_service import email_service  # Import our email service
 from .decorators import login_exempt
 
 @login_exempt
@@ -184,71 +186,6 @@ def supplier_products(request, supplier_id):
         'products': products
     })
 
-@login_required
-@csrf_exempt
-def send_purchase_order(request):
-    """Send purchase order via email"""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            supplier_id = data.get('supplier_id')
-            selected_products = data.get('products', [])
-            
-            supplier = get_object_or_404(Supplier, id=supplier_id)
-            
-            # Create Purchase Order
-            po = PurchaseOrder.objects.create(
-                supplier=supplier,
-                created_by=request.user,
-                status='sent'
-            )
-            
-            total_amount = 0
-            for product_data in selected_products:
-                product = get_object_or_404(Product, id=product_data['id'])
-                quantity = int(product_data['quantity'])
-                unit_price = float(product_data.get('unit_price', product.proposed_price))
-                
-                PurchaseOrderItem.objects.create(
-                    purchase_order=po,
-                    product=product,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    total_price=quantity * unit_price
-                )
-                total_amount += quantity * unit_price
-            
-            po.total_amount = total_amount
-            po.save()
-            
-            # Get email options
-            email_options = {
-                'to_supplier': True,  # Default is True
-                'to_po_dept': True,   # Default is True
-                'to_cat_head': True,  # Default is True
-            }
-            
-            # Update email options if provided in the request
-            if selected_products and len(selected_products) > 0:
-                first_product = selected_products[0]
-                email_options['to_supplier'] = first_product.get('to_supplier', True)
-                email_options['to_po_dept'] = first_product.get('to_po_dept', True)
-                email_options['to_cat_head'] = first_product.get('to_cat_head', True)
-            
-            # Send email with options
-            email_sent = send_po_email(po, email_options)
-            
-            if email_sent:
-                messages.success(request, f'Purchase Order {po.po_number} sent successfully!')
-                return JsonResponse({'success': True, 'po_number': po.po_number})
-            else:
-                messages.error(request, 'Failed to send email. Please try again.')
-                return JsonResponse({'success': False, 'error': 'Email sending failed'})
-                
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 def bulk_upload(request):
@@ -436,59 +373,6 @@ def print_po(request, po_id):
     
     html_content = render_to_string('po_system/print_po.html', context)
     return HttpResponse(html_content)
-
-@login_required
-@csrf_exempt
-def send_po_email_view(request, po_id):
-    """Send purchase order email"""
-    if request.method == 'POST':
-        try:
-            po = get_object_or_404(PurchaseOrder, id=po_id)
-            
-            # Don't allow sending cancelled POs
-            if po.status == 'cancelled':
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'Cannot send a cancelled purchase order'
-                })
-            
-            # Email options - send to all recipients by default
-            email_options = {
-                'to_supplier': True,
-                'to_po_dept': True,
-                'to_cat_head': True
-            }
-            
-            # Send email using Zepto Mail
-            email_sent = send_po_email(po, email_options)
-            
-            if email_sent:
-                # Update status to sent if it was draft
-                if po.status == 'draft':
-                    po.status = 'sent'
-                    po.sent_at = timezone.now()
-                    po.save()
-                
-                return JsonResponse({
-                    'success': True, 
-                    'message': f'Purchase Order {po.po_number} sent successfully to {po.supplier.name}!'
-                })
-            else:
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'Failed to send email. Please check your Zepto Mail configuration and try again.'
-                })
-                
-        except Exception as e:
-            return JsonResponse({
-                'success': False, 
-                'error': f'Unexpected error: {str(e)}'
-            })
-    
-    return JsonResponse({
-        'success': False, 
-        'error': 'Invalid request method'
-    })
 
 @login_required
 @csrf_exempt
@@ -1153,3 +1037,167 @@ def confirm_po(request, po_id):
         'success': False, 
         'error': 'Invalid request method'
     })
+
+
+@login_required
+@csrf_exempt
+def send_purchase_order(request):
+    """Send purchase order via email using enhanced email service"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            supplier_id = data.get('supplier_id')
+            selected_products = data.get('products', [])
+            email_options = data.get('email_options', {
+                'to_supplier': True,
+                'to_po_dept': True,
+                'to_cat_head': True
+            })
+            
+            supplier = get_object_or_404(Supplier, id=supplier_id)
+            
+            # Create Purchase Order
+            po = PurchaseOrder.objects.create(
+                supplier=supplier,
+                created_by=request.user,
+                status='draft'  # Start as draft, will be updated when email is sent
+            )
+            
+            total_amount = 0
+            for product_data in selected_products:
+                product = get_object_or_404(Product, id=product_data['id'])
+                quantity = int(product_data['quantity'])
+                unit_price = float(product_data.get('unit_price', product.proposed_price))
+                
+                PurchaseOrderItem.objects.create(
+                    purchase_order=po,
+                    product=product,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    total_price=quantity * unit_price
+                )
+                total_amount += quantity * unit_price
+            
+            po.total_amount = total_amount
+            po.save()
+            
+            # Send email using our enhanced email service
+            success, message = email_service.send_po_email(po, email_options)
+            
+            if success:
+                messages.success(request, f'Purchase Order {po.po_number} created and sent successfully!')
+                return JsonResponse({
+                    'success': True, 
+                    'po_number': po.po_number,
+                    'message': message
+                })
+            else:
+                # Even if email fails, PO is created
+                messages.warning(request, f'Purchase Order {po.po_number} created but email sending failed: {message}')
+                return JsonResponse({
+                    'success': True, 
+                    'po_number': po.po_number,
+                    'warning': f'PO created but email failed: {message}'
+                })
+                
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+@csrf_exempt
+def send_po_email_view(request, po_id):
+    """Send purchase order email using enhanced email service"""
+    if request.method == 'POST':
+        try:
+            po = get_object_or_404(PurchaseOrder, id=po_id)
+            
+            # Don't allow sending cancelled POs
+            if po.status == 'cancelled':
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Cannot send a cancelled purchase order'
+                })
+            
+            # Get email options from request
+            email_options = {
+                'to_supplier': True,
+                'to_po_dept': True,
+                'to_cat_head': True
+            }
+            
+            # If specific options are provided in the request
+            if request.content_type == 'application/json':
+                try:
+                    data = json.loads(request.body)
+                    email_options.update(data.get('email_options', {}))
+                except:
+                    pass  # Use defaults if JSON parsing fails
+            
+            # Send email using enhanced email service
+            success, message = email_service.send_po_email(po, email_options)
+            
+            if success:
+                return JsonResponse({
+                    'success': True, 
+                    'message': message
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': message
+                })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Unexpected error: {str(e)}'
+            })
+    
+    return JsonResponse({
+        'success': False, 
+        'error': 'Invalid request method'
+    })
+
+@login_required
+def test_email_view(request):
+    """Test email functionality"""
+    if request.method == 'POST':
+        try:
+            recipient_email = request.POST.get('email')
+            method = request.POST.get('method', 'auto')  # auto, smtp, or api
+            
+            if not recipient_email:
+                messages.error(request, 'Please provide an email address')
+                return redirect('po_system:dashboard')
+            
+            # Send test email
+            success, message = email_service.send_test_email(recipient_email, method)
+            
+            if success:
+                messages.success(request, f'Test email sent successfully! {message}')
+            else:
+                messages.error(request, f'Test email failed: {message}')
+                
+        except Exception as e:
+            messages.error(request, f'Error sending test email: {str(e)}')
+    
+    return redirect('po_system:dashboard')
+
+@login_required
+def email_settings_view(request):
+    """View email settings and test functionality"""
+    context = {
+        'smtp_available': email_service.smtp_available,
+        'api_available': email_service.api_available,
+        'email_host': getattr(settings, 'EMAIL_HOST', 'Not configured'),
+        'email_port': getattr(settings, 'EMAIL_PORT', 'Not configured'),
+        'email_use_tls': getattr(settings, 'EMAIL_USE_TLS', False),
+        'email_use_ssl': getattr(settings, 'EMAIL_USE_SSL', False),
+        'default_from_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not configured'),
+        'zepto_from_email': getattr(settings, 'ZEPTO_FROM_EMAIL', 'Not configured'),
+        'company_name': getattr(settings, 'COMPANY_NAME', 'Not configured'),
+    }
+    
+    return render(request, 'po_system/email_settings.html', context)
