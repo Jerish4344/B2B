@@ -47,8 +47,38 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.name.id_for_label }}" class="form-label">Product Name *</label>
-                                {{ form.name }}
+                                <label for="product-name-input" class="form-label">Product Name *</label>
+                                <div class="position-relative">
+                                    <input type="text" 
+                                           id="product-name-input" 
+                                           name="{{ form.name.name }}" 
+                                           class="form-control"
+                                           placeholder="Start typing product name..."
+                                           value="{{ form.name.value|default:'' }}"
+                                           autocomplete="off"
+                                           list="product-suggestions"
+                                           required>
+                                    
+                                    <!-- HTML5 datalist for suggestions -->
+                                    <datalist id="product-suggestions">
+                                    </datalist>
+                                    
+                                    <!-- Manual dropdown for better control -->
+                                    <div id="manual-suggestions" class="position-absolute w-100 bg-white border border-top-0 rounded-bottom shadow-sm" style="display: none; z-index: 1050; max-height: 250px; overflow-y: auto;">
+                                    </div>
+                                    
+                                    <!-- Selected product info -->
+                                    <div id="selected-product-info" class="mt-2" style="display: none;">
+                                        <div class="alert alert-info p-2">
+                                            <small>
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                <strong>Existing Product:</strong> <span id="existing-product-name"></span>
+                                                <br><strong>Category:</strong> <span id="existing-product-category"></span>
+                                                <br><strong>Current Suppliers:</strong> <span id="existing-product-suppliers"></span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
                                 {% if form.name.errors %}
                                     <div class="text-danger">
                                         {% for error in form.name.errors %}
@@ -56,6 +86,9 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
+                                <div class="form-text">
+                                    Start typing to see existing products
+                                </div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
@@ -74,6 +107,8 @@
                             </div>
                         </div>
                         
+                        <!-- Update this section in your templates/po_system/product_form.html -->
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
@@ -92,7 +127,21 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.unit.id_for_label }}" class="form-label">Unit of Measurement *</label>
-                                {{ form.unit }}
+                                <div class="unit-choices">
+                                    <!-- Create a grid layout for radio buttons -->
+                                    <div class="row">
+                                        {% for choice in form.unit %}
+                                            <div class="col-md-6 mb-2">
+                                                <div class="form-check">
+                                                    {{ choice.tag }}
+                                                    <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                                        {{ choice.choice_label }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                                 {% if form.unit.errors %}
                                     <div class="text-danger">
                                         {% for error in form.unit.errors %}
@@ -100,10 +149,10 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
-                                <div class="form-text">e.g., Kg, Liter, Pieces, etc.</div>
                             </div>
                         </div>
-                        
+
+                        <!-- Rest of your form fields continue as before -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="{{ form.current_price.id_for_label }}" class="form-label">Current Price (₹) *</label>
@@ -118,7 +167,8 @@
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.proposed_price.id_for_label }}" class="form-label">Proposed Price (₹) *</label>
+                                <!-- REMOVED ASTERISK HERE -->
+                                <label for="{{ form.proposed_price.id_for_label }}" class="form-label">Proposed Price (₹)</label>
                                 {{ form.proposed_price }}
                                 {% if form.proposed_price.errors %}
                                     <div class="text-danger">
@@ -129,10 +179,11 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="{{ form.proposed_stock.id_for_label }}" class="form-label">Proposed Stock Quantity *</label>
+                                <!-- REMOVED ASTERISK HERE -->
+                                <label for="{{ form.proposed_stock.id_for_label }}" class="form-label">Proposed Stock Quantity</label>
                                 {{ form.proposed_stock }}
                                 {% if form.proposed_stock.errors %}
                                     <div class="text-danger">
@@ -165,87 +216,46 @@
                             {% endif %}
                         </div>
                         
+                        <!-- Price Calculation Display -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-calculator me-2"></i>Price Calculation</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>Proposed Price:</strong> 
+                                            <span id="display-price">₹0.00</span> / <span id="display-unit">Kg</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Proposed Stock:</strong> 
+                                            <span id="display-stock">0</span> <span id="display-stock-unit">Kg</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Total Value:</strong> 
+                                            <span id="display-total" class="text-success">₹0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="d-flex justify-content-between">
                             <a href="{% url 'po_system:product_list' %}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>{{ submit_text }}
-                            </button>
+                            <div>
+                                {% if not product %}
+                                <button type="submit" name="add_another" class="btn btn-success me-2">
+                                    <i class="fas fa-plus me-1"></i>Save & Add Another
+                                </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>{{ submit_text }}
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Add Modals -->
-<!-- Add Supplier Modal -->
-<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Add Supplier</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="quick-supplier-form">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Supplier Name *</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email *</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phone *</label>
-                        <input type="text" name="phone" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contact Person *</label>
-                        <input type="text" name="contact_person" class="form-control" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveQuickSupplier()">Add Supplier</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Category Modal -->
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Add Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="quick-category-form">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Category Name *</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Head Name *</label>
-                        <input type="text" name="head_name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Head Email *</label>
-                        <input type="email" name="head_email" class="form-control" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveQuickCategory()">Add Category</button>
             </div>
         </div>
     </div>
@@ -269,6 +279,301 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// Enhanced autocomplete search for Product Name field
+$(document).ready(function() {
+    const productNameInput = $('input[name="name"], #id_name');
+    
+    let searchTimeout;
+    let currentProducts = [];
+    
+    // Initialize the search functionality
+    initializeProductSearch();
+    
+    function initializeProductSearch() {
+        // Hide dropdown initially
+        hideSearchDropdown();
+        
+        // Enhanced input handler
+        productNameInput.on('input', function() {
+            const searchTerm = $(this).val().trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            if (searchTerm.length === 0) {
+                // Hide dropdown when input is empty
+                hideSearchDropdown();
+                return;
+            }
+            
+            if (searchTerm.length >= 1) {
+                // Show loading state
+                showLoadingState();
+                
+                // Debounce search for better performance
+                searchTimeout = setTimeout(() => {
+                    performProductSearch(searchTerm);
+                }, 200);
+            }
+        });
+        
+        // Handle keyboard navigation
+        productNameInput.on('keydown', function(e) {
+            handleKeyboardNavigation(e);
+        });
+        
+        // Hide dropdown when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.product-search-dropdown, .form-control').length) {
+                hideSearchDropdown();
+            }
+        });
+        
+        // Focus handler
+        productNameInput.on('focus', function() {
+            const searchTerm = $(this).val().trim();
+            if (searchTerm.length > 0) {
+                performProductSearch(searchTerm);
+            }
+        });
+    }
+    
+    function performProductSearch(searchTerm) {
+        // Search products via API
+        searchProducts(searchTerm).then(products => {
+            currentProducts = products;
+            displaySearchResults(products, searchTerm);
+        }).catch(error => {
+            console.error('Search error:', error);
+            showErrorState();
+        });
+    }
+    
+    function searchProducts(searchTerm) {
+        // Real API call to Django backend
+        return $.ajax({
+            url: '/api/products/search/',
+            method: 'GET',
+            data: { q: searchTerm },
+            dataType: 'json',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(response => {
+            return response.products || [];
+        }).catch(error => {
+            console.error('Product search error:', error);
+            return [];
+        });
+    }
+    
+    function displaySearchResults(products, searchTerm) {
+        const dropdown = getOrCreateDropdown();
+        
+        if (products.length === 0) {
+            showNoResultsState(searchTerm);
+            return;
+        }
+        
+        let html = '';
+        
+        // Add search stats
+        html += `
+            <div class="search-stats">
+                <i class="fas fa-search me-2"></i>
+                Found ${products.length} product${products.length !== 1 ? 's' : ''} for "${searchTerm}"
+            </div>
+        `;
+        
+        // Add product results - ONLY SHOW PRODUCT NAMES
+        products.forEach((product, index) => {
+            const highlightedName = highlightText(product.name, searchTerm);
+            
+            html += `
+                <div class="search-result-item" data-product-id="${product.id}" data-index="${index}">
+                    <div class="result-content">
+                        <div class="result-main">${highlightedName}</div>
+                    </div>
+                    <div class="result-actions">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            `;
+        });
+        
+        dropdown.html(html);
+        showSearchDropdown();
+        
+        // Add click handlers
+        $('.search-result-item').on('click', function() {
+            selectProduct($(this));
+        });
+    }
+    
+    function selectProduct(item) {
+        const productId = item.data('product-id');
+        const product = currentProducts.find(p => p.id === productId);
+        
+        if (product) {
+            // ONLY fill the product name - no other fields
+            productNameInput.val(product.name);
+            
+            // Hide dropdown
+            hideSearchDropdown();
+            
+            // Trigger change event
+            productNameInput.trigger('change');
+        }
+    }
+    
+    // Function removed - no longer auto-filling other fields
+    
+    function highlightText(text, searchTerm) {
+        if (!searchTerm) return text;
+        
+        const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
+    
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    function handleKeyboardNavigation(e) {
+        const items = $('.search-result-item:visible');
+        const highlighted = $('.search-result-item.highlighted');
+        
+        switch(e.keyCode) {
+            case 38: // Up arrow
+                e.preventDefault();
+                if (highlighted.length === 0) {
+                    items.last().addClass('highlighted');
+                } else {
+                    highlighted.removeClass('highlighted');
+                    const prev = highlighted.prev('.search-result-item');
+                    if (prev.length) {
+                        prev.addClass('highlighted');
+                    } else {
+                        items.last().addClass('highlighted');
+                    }
+                }
+                break;
+                
+            case 40: // Down arrow
+                e.preventDefault();
+                if (highlighted.length === 0) {
+                    items.first().addClass('highlighted');
+                } else {
+                    highlighted.removeClass('highlighted');
+                    const next = highlighted.next('.search-result-item');
+                    if (next.length) {
+                        next.addClass('highlighted');
+                    } else {
+                        items.first().addClass('highlighted');
+                    }
+                }
+                break;
+                
+            case 13: // Enter
+                e.preventDefault();
+                if (highlighted.length) {
+                    selectProduct(highlighted);
+                } else if ($('.search-result-item').length === 1) {
+                    selectProduct($('.search-result-item').first());
+                }
+                break;
+                
+            case 27: // Escape
+                hideSearchDropdown();
+                productNameInput.blur();
+                break;
+        }
+    }
+    
+    function getOrCreateDropdown() {
+        let dropdown = $('.product-search-dropdown');
+        
+        if (dropdown.length === 0) {
+            dropdown = $(`
+                <div class="product-search-dropdown">
+                    <div class="search-results"></div>
+                </div>
+            `);
+            
+            // Position dropdown below the input
+            const inputContainer = productNameInput.closest('.form-group, .mb-3, .col-md-6');
+            if (inputContainer.length) {
+                inputContainer.css('position', 'relative');
+                inputContainer.append(dropdown);
+            } else {
+                productNameInput.after(dropdown);
+            }
+        }
+        
+        return dropdown.find('.search-results');
+    }
+    
+    function showSearchDropdown() {
+        $('.product-search-dropdown').show();
+    }
+    
+    function hideSearchDropdown() {
+        $('.product-search-dropdown').hide();
+        $('.search-result-item').removeClass('highlighted');
+    }
+    
+    function showLoadingState() {
+        const dropdown = getOrCreateDropdown();
+        dropdown.html(`
+            <div class="search-loading">
+                <div class="d-flex align-items-center justify-content-center py-3">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <span>Searching products...</span>
+                </div>
+            </div>
+        `);
+        showSearchDropdown();
+    }
+    
+    function showNoResultsState(searchTerm) {
+        const dropdown = getOrCreateDropdown();
+        dropdown.html(`
+            <div class="no-results">
+                <div class="text-center py-4">
+                    <i class="fas fa-search-minus fa-2x text-muted mb-2"></i>
+                    <div class="fw-bold">No products found</div>
+                    <div class="text-muted">No products match "${searchTerm}"</div>
+                    <button type="button" class="btn btn-link btn-sm mt-2" onclick="clearProductSearch()">
+                        <i class="fas fa-times me-1"></i>Clear search
+                    </button>
+                </div>
+            </div>
+        `);
+        showSearchDropdown();
+    }
+    
+    function showErrorState() {
+        const dropdown = getOrCreateDropdown();
+        dropdown.html(`
+            <div class="search-error">
+                <div class="text-center py-4 text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <div class="fw-bold">Search Error</div>
+                    <div>Unable to search products. Please try again.</div>
+                </div>
+            </div>
+        `);
+        showSearchDropdown();
+    }
+    
+    // Global function for clear button
+    window.clearProductSearch = function() {
+        productNameInput.val('').focus();
+        hideSearchDropdown();
+    };
+});
 
 // Quick add supplier
 function showAddSupplierModal() {
@@ -385,5 +690,128 @@ document.addEventListener('DOMContentLoaded', function() {
         stockInput.addEventListener('input', updateTotalValue);
     }
 });
+
+// Add enhanced styles for the autocomplete dropdown
+$('<style>')
+    .prop('type', 'text/css')
+    .html(`
+        .product-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1050;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .search-stats {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .search-result-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .search-result-item:hover,
+        .search-result-item.highlighted {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-content {
+            flex: 1;
+        }
+        
+        .result-main {
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #2c3e50;
+        }
+        
+        .result-sub {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .result-suppliers {
+            font-size: 0.8em;
+            color: #999;
+        }
+        
+        .result-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-badge {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .search-result-item mark {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+            border-radius: 2px;
+            padding: 1px 2px;
+        }
+        
+        .search-loading,
+        .no-results,
+        .search-error {
+            padding: 16px;
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        /* Input focus enhancement */
+        input[name="name"]:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        /* Smooth transitions */
+        .product-search-dropdown {
+            animation: fadeIn 0.2s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `)
+    .appendTo('head');
+
+console.log('Enhanced product autocomplete search initialized');
 </script>
 {% endblock %}

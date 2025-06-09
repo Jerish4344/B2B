@@ -1,4 +1,4 @@
-# po_system/urls.py - Updated with email functionality
+# po_system/urls.py - Updated with API endpoints
 
 from django.urls import path
 from . import views
@@ -27,7 +27,12 @@ urlpatterns = [
     path('po/<int:po_id>/send/', views.send_po_email_view, name='send_po_email'),
     path('po/<int:po_id>/cancel/', views.cancel_po, name='cancel_po'),
     
-    # Email Management URLs - NEW
+    # API Endpoints - NEW
+    path('api/product-suggestions/', views.product_suggestions_api, name='product_suggestions_api'),
+    path('api/check-product-duplicate/', views.check_product_duplicate, name='check_product_duplicate'),
+    path('api/products/search/', views.product_search_api, name='product_search_api'),
+    
+    # Email Management URLs
     path('email-settings/', views.email_settings_view, name='email_settings'),
     path('test-email/', views.test_email_view, name='test_email'),
     

@@ -65,10 +65,38 @@
                                 <tr><td>current_price</td><td>Current price per unit</td><td>120.00</td></tr>
                                 <tr><td>proposed_price</td><td>Proposed price per unit</td><td>118.00</td></tr>
                                 <tr><td>proposed_stock</td><td>Proposed stock quantity</td><td>500</td></tr>
-                                <tr><td>unit</td><td>Unit of measurement</td><td>Kg</td></tr>
+                                <tr><td><strong>unit</strong></td><td><strong>Unit of measurement</strong></td><td><strong>Kg, gm, nos, dozen, pairs, ml, ltr</strong></td></tr>
                                 <tr><td>description</td><td>Product description (optional)</td><td>High quality peanuts</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Unit Guidelines -->
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Unit of Measurement Guidelines</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Weight Units:</strong>
+                                <ul class="mb-2">
+                                    <li><code>Kg</code> - Kilogram (for heavy items)</li>
+                                    <li><code>gm</code> - Gram (for light items)</li>
+                                </ul>
+                                <strong>Volume Units:</strong>
+                                <ul class="mb-2">
+                                    <li><code>ltr</code> - Liter (for large volumes)</li>
+                                    <li><code>ml</code> - Milliliter (for small volumes)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Count Units:</strong>
+                                <ul class="mb-2">
+                                    <li><code>nos</code> - Numbers/Pieces</li>
+                                    <li><code>dozen</code> - Dozen (12 pieces)</li>
+                                    <li><code>pairs</code> - Pairs (2 pieces)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="mb-0"><strong>Note:</strong> Use exact values as shown above. Case sensitive!</p>
                     </div>
                 </div>
             </div>
@@ -82,13 +110,17 @@
 function downloadTemplate() {
     const csvContent = `supplier_name,supplier_email,supplier_phone,contact_person,product_name,category_name,category_head_email,category_head_name,current_price,proposed_price,proposed_stock,unit,description
 ABC Suppliers,abc@supplier.com,9876543210,John Doe,Premium Peanuts,Nuts,nuts.head@company.com,Jane Smith,120.00,118.00,500,Kg,High quality peanuts
-XYZ Traders,xyz@trader.com,9876543211,Mike Johnson,Cashew Premium,Nuts,nuts.head@company.com,Jane Smith,1200.00,1250.00,150,Kg,Premium cashews`;
+XYZ Traders,xyz@trader.com,9876543211,Mike Johnson,Cashew Premium,Nuts,nuts.head@company.com,Jane Smith,1200.00,1250.00,150,Kg,Premium cashews
+Fresh Dairy,dairy@fresh.com,9876543212,Sarah Lee,Fresh Milk,Dairy,dairy.head@company.com,Tom Wilson,45.00,42.00,100,ltr,Fresh cow milk
+Spice World,spice@world.com,9876543213,Ram Kumar,Black Pepper,Spices,spice.head@company.com,Priya Sharma,800.00,750.00,50,gm,Premium black pepper
+Tool Master,tools@master.com,9876543214,David Brown,Screwdriver Set,Tools,tools.head@company.com,Alex Johnson,150.00,140.00,24,dozen,Professional screwdriver set
+Shoe Palace,shoes@palace.com,9876543215,Lisa Wang,Running Shoes,Footwear,footwear.head@company.com,Mark Davis,2500.00,2400.00,50,pairs,Premium running shoes`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'product_upload_template.csv';
+    a.download = 'product_upload_template_with_units.csv';
     a.click();
     window.URL.revokeObjectURL(url);
 }

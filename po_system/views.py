@@ -189,7 +189,7 @@ def supplier_products(request, supplier_id):
 
 @login_required
 def bulk_upload(request):
-    """Bulk upload products"""
+    """Bulk upload products with enhanced duplicate detection and unit validation"""
     if request.method == 'POST':
         form = BulkUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -199,54 +199,119 @@ def bulk_upload(request):
                 csv_data = csv.DictReader(StringIO(decoded_file))
                 
                 created_count = 0
+                updated_count = 0
+                skipped_count = 0
                 errors = []
+                
+                # Valid unit choices
+                valid_units = ['Kg', 'gm', 'nos', 'dozen', 'pairs', 'ml', 'ltr']
                 
                 for row_num, row in enumerate(csv_data, start=2):
                     try:
+                        # Validate required fields
+                        required_fields = ['supplier_name', 'product_name', 'category_name', 
+                                         'current_price', 'proposed_price', 'proposed_stock']
+                        
+                        missing_fields = []
+                        for field in required_fields:
+                            if not row.get(field, '').strip():
+                                missing_fields.append(field)
+                        
+                        if missing_fields:
+                            errors.append(f"Row {row_num}: Missing required fields: {', '.join(missing_fields)}")
+                            continue
+                        
+                        # Validate unit
+                        unit = row.get('unit', 'Kg').strip()
+                        if unit not in valid_units:
+                            errors.append(f"Row {row_num}: Invalid unit '{unit}'. Valid units are: {', '.join(valid_units)}")
+                            continue
+                        
                         # Get or create supplier
                         supplier, _ = Supplier.objects.get_or_create(
-                            name=row['supplier_name'],
+                            name=row['supplier_name'].strip(),
                             defaults={
-                                'email': row.get('supplier_email', ''),
-                                'phone': row.get('supplier_phone', ''),
-                                'address': row.get('supplier_address', ''),
-                                'contact_person': row.get('contact_person', ''),
+                                'email': row.get('supplier_email', '').strip(),
+                                'phone': row.get('supplier_phone', '').strip(),
+                                'address': row.get('supplier_address', '').strip(),
+                                'contact_person': row.get('contact_person', '').strip(),
                             }
                         )
                         
                         # Get or create category
                         category, _ = Category.objects.get_or_create(
-                            name=row['category_name'],
+                            name=row['category_name'].strip(),
                             defaults={
-                                'head_email': row.get('category_head_email', ''),
-                                'head_name': row.get('category_head_name', ''),
+                                'head_email': row.get('category_head_email', '').strip(),
+                                'head_name': row.get('category_head_name', '').strip(),
                             }
                         )
                         
-                        # Create product
-                        product, created = Product.objects.get_or_create(
-                            name=row['product_name'],
-                            supplier=supplier,
-                            defaults={
-                                'category': category,
-                                'current_price': Decimal(row['current_price']),
-                                'proposed_price': Decimal(row['proposed_price']),
-                                'proposed_stock': int(row['proposed_stock']),
-                                'unit': row.get('unit', 'Kg'),
-                                'description': row.get('description', ''),
-                            }
-                        )
+                        # Validate prices and stock
+                        try:
+                            current_price = Decimal(str(row['current_price']).strip())
+                            proposed_price = Decimal(str(row['proposed_price']).strip())
+                            proposed_stock = int(str(row['proposed_stock']).strip())
+                            
+                            if current_price <= 0:
+                                errors.append(f"Row {row_num}: Current price must be greater than 0")
+                                continue
+                            if proposed_price <= 0:
+                                errors.append(f"Row {row_num}: Proposed price must be greater than 0")
+                                continue
+                            if proposed_stock < 0:
+                                errors.append(f"Row {row_num}: Proposed stock cannot be negative")
+                                continue
+                                
+                        except (ValueError, TypeError, decimal.InvalidOperation):
+                            errors.append(f"Row {row_num}: Invalid price or stock values")
+                            continue
                         
-                        if created:
+                        # Check for existing product with same name and supplier
+                        product_name = row['product_name'].strip()
+                        existing_product = Product.objects.filter(
+                            name__iexact=product_name,
+                            supplier=supplier
+                        ).first()
+                        
+                        if existing_product:
+                            # Update existing product
+                            existing_product.category = category
+                            existing_product.current_price = current_price
+                            existing_product.proposed_price = proposed_price
+                            existing_product.proposed_stock = proposed_stock
+                            existing_product.unit = unit
+                            existing_product.description = row.get('description', '').strip()
+                            existing_product.save()
+                            updated_count += 1
+                        else:
+                            # Create new product
+                            Product.objects.create(
+                                name=product_name,
+                                supplier=supplier,
+                                category=category,
+                                current_price=current_price,
+                                proposed_price=proposed_price,
+                                proposed_stock=proposed_stock,
+                                unit=unit,
+                                description=row.get('description', '').strip(),
+                            )
                             created_count += 1
                             
                     except Exception as e:
                         errors.append(f"Row {row_num}: {str(e)}")
                 
+                # Show results
+                success_msg = f"Successfully processed {created_count + updated_count} products! "
+                success_msg += f"({created_count} created, {updated_count} updated)"
+                
                 if errors:
-                    messages.warning(request, f"Created {created_count} products with {len(errors)} errors. Check logs for details.")
+                    error_msg = f"{success_msg}\n\n{len(errors)} errors occurred:\n" + "\n".join(errors[:10])
+                    if len(errors) > 10:
+                        error_msg += f"\n... and {len(errors) - 10} more errors"
+                    messages.warning(request, error_msg)
                 else:
-                    messages.success(request, f"Successfully created {created_count} products!")
+                    messages.success(request, success_msg)
                     
             except Exception as e:
                 messages.error(request, f"Error processing file: {str(e)}")
@@ -796,15 +861,72 @@ def product_list(request):
 
 @login_required
 def product_create(request):
-    """Create a new product"""
+    """Create a new product with duplicate detection"""
     if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
+            product_name = form.cleaned_data['name']
+            supplier = form.cleaned_data['supplier']
+            
+            # Check if this exact combination already exists
+            existing_product = Product.objects.filter(
+                name__iexact=product_name,
+                supplier=supplier
+            ).first()
+            
+            if existing_product:
+                messages.warning(
+                    request, 
+                    f'Product "{product_name}" already exists for supplier "{supplier.name}". '
+                    f'You can edit the existing product instead.'
+                )
+                return redirect('po_system:product_edit', product_id=existing_product.id)
+            
+            # Check if product name exists with other suppliers
+            other_suppliers = Product.objects.filter(
+                name__iexact=product_name
+            ).exclude(supplier=supplier).select_related('supplier')
+            
+            if other_suppliers.exists():
+                supplier_names = [p.supplier.name for p in other_suppliers]
+                messages.info(
+                    request,
+                    f'Note: Product "{product_name}" is already available from other suppliers: '
+                    f'{", ".join(supplier_names)}. This helps maintain consistency.'
+                )
+            
+            # Save the product
             product = form.save()
             messages.success(request, f'Product "{product.name}" created successfully!')
-            return redirect('po_system:product_list')
+            
+            # Check if user wants to add another product
+            if 'add_another' in request.POST:
+                return redirect('po_system:product_create')
+            else:
+                return redirect('po_system:product_list')
+        else:
+            # Handle form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field.title()}: {error}')
     else:
         form = ProductForm()
+        
+        # Pre-fill from URL parameters if provided
+        supplier_id = request.GET.get('supplier')
+        category_id = request.GET.get('category')
+        
+        if supplier_id:
+            try:
+                form.fields['supplier'].initial = int(supplier_id)
+            except (ValueError, TypeError):
+                pass
+                
+        if category_id:
+            try:
+                form.fields['category'].initial = int(category_id)
+            except (ValueError, TypeError):
+                pass
     
     return render(request, 'po_system/product_form.html', {
         'form': form,
@@ -814,15 +936,37 @@ def product_create(request):
 
 @login_required
 def product_edit(request, product_id):
-    """Edit an existing product"""
+    """Edit an existing product with enhanced validation"""
     product = get_object_or_404(Product, id=product_id)
     
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
-            product = form.save()
-            messages.success(request, f'Product "{product.name}" updated successfully!')
-            return redirect('po_system:product_list')
+            product_name = form.cleaned_data['name']
+            supplier = form.cleaned_data['supplier']
+            
+            # Check if this would create a duplicate (excluding current product)
+            existing_product = Product.objects.filter(
+                name__iexact=product_name,
+                supplier=supplier
+            ).exclude(id=product.id).first()
+            
+            if existing_product:
+                messages.error(
+                    request,
+                    f'Product "{product_name}" already exists for supplier "{supplier.name}". '
+                    f'Please choose a different name or supplier.'
+                )
+            else:
+                # Save the product
+                product = form.save()
+                messages.success(request, f'Product "{product.name}" updated successfully!')
+                return redirect('po_system:product_list')
+        else:
+            # Handle form errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field.title()}: {error}')
     else:
         form = ProductForm(instance=product)
     
@@ -1201,3 +1345,104 @@ def email_settings_view(request):
     }
     
     return render(request, 'po_system/email_settings.html', context)
+
+@login_required
+def product_suggestions_api(request):
+    """API endpoint for product name suggestions"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 1:  # Changed from 2 to 1 to show results faster
+        return JsonResponse({'products': []})
+    
+    try:
+        # Search for products with similar names
+        products = Product.objects.filter(
+            name__icontains=query,
+            is_active=True
+        ).select_related('category', 'supplier').distinct()[:15]
+        
+        # Group products by name to avoid duplicates
+        product_names = {}
+        for product in products:
+            name = product.name
+            if name not in product_names:
+                product_names[name] = {
+                    'name': name,
+                    'category': product.category.name,
+                    'unit': product.unit,
+                    'suppliers': [],
+                    'supplier_count': 0
+                }
+            product_names[name]['suppliers'].append(product.supplier.name)
+        
+        # Format response
+        suggestions = []
+        for name, data in product_names.items():
+            data['supplier_count'] = len(data['suppliers'])
+            data['suppliers'] = ', '.join(data['suppliers'][:3])  # Show first 3 suppliers
+            if len(data['suppliers']) > 3:
+                data['suppliers'] += f' and {len(data["suppliers"]) - 3} more'
+            suggestions.append(data)
+        
+        return JsonResponse({'products': suggestions})
+        
+    except Exception as e:
+        print(f"Error in product_suggestions_api: {e}")  # For debugging
+        return JsonResponse({'products': [], 'error': str(e)})
+
+@login_required 
+def check_product_duplicate(request):
+    """Check if product already exists with this supplier"""
+    product_name = request.GET.get('name', '').strip()
+    supplier_id = request.GET.get('supplier_id', '')
+    
+    if not product_name or not supplier_id:
+        return JsonResponse({'exists': False})
+    
+    try:
+        supplier_id = int(supplier_id)
+        exists = Product.objects.filter(
+            name__iexact=product_name,
+            supplier_id=supplier_id
+        ).exists()
+        
+        return JsonResponse({'exists': exists})
+    except (ValueError, TypeError):
+        return JsonResponse({'exists': False})
+    
+@login_required
+def product_search_api(request):
+    """API endpoint for product autocomplete search"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 1:
+        return JsonResponse({'products': []})
+    
+    # Search products by name, description, or supplier name
+    products = Product.objects.filter(
+        Q(name__icontains=query) |
+        Q(description__icontains=query) |
+        Q(supplier__name__icontains=query),
+        is_active=True
+    ).select_related('supplier', 'category')[:10]  # Limit to 10 results
+    
+    product_data = []
+    for product in products:
+        product_data.append({
+            'id': product.id,
+            'name': product.name,
+            'description': product.description or f"{product.name} - {product.unit}",
+            'suppliers': [product.supplier.name],
+            'category': product.category.name,
+            'supplier_id': product.supplier.id,
+            'category_id': product.category.id,
+            'unit': product.unit,
+            'current_price': float(product.current_price),
+            'proposed_price': float(product.proposed_price),
+        })
+    
+    return JsonResponse({
+        'products': product_data,
+        'total': len(product_data),
+        'query': query
+    })

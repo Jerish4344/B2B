@@ -1,7 +1,72 @@
+# po_system/forms.py - Updated ProductForm with radio button units
+
 from django import forms
 from .models import *
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+
+# Update your ProductForm in po_system/forms.py
+
+from django import forms
+from .models import *
+from django.core.validators import MinValueValidator
+from decimal import Decimal
+
+# Update your ProductForm in po_system/forms.py
+
+from django import forms
+from .models import *
+from django.core.validators import MinValueValidator
+from decimal import Decimal
+
+class ProductForm(forms.ModelForm):
+    """Form for adding/editing products with unit choices"""
+    
+    # Define unit choices
+    UNIT_CHOICES = [
+        ('Kg', 'Kilogram (Kg)'),
+        ('gm', 'Gram (gm)'),
+        ('nos', 'Numbers (nos)'),
+        ('dozen', 'Dozen'),
+        ('pairs', 'Pairs'),
+        ('ltr', 'Liter (ltr)'),
+        ('ml', 'Milliliter (ml)'),
+    ]
+    
+    # Override the unit field to use radio buttons
+    unit = forms.ChoiceField(
+        choices=UNIT_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial='Kg',
+        help_text='Select the appropriate unit for this product'
+    )
+    
+    class Meta:
+        model = Product
+        fields = ['name', 'supplier', 'category', 'current_price', 'proposed_price', 'proposed_stock', 'unit', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
+            'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'current_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'proposed_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'proposed_stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Product Description'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make proposed_price and proposed_stock optional (not required)
+        self.fields['proposed_price'].required = False
+        self.fields['proposed_stock'].required = False
+        
+        # You can also make description optional if needed
+        self.fields['description'].required = False
+        
+        # Update help text to indicate optional fields
+        self.fields['proposed_price'].help_text = 'Optional: Proposed price for this product'
+        self.fields['proposed_stock'].help_text = 'Optional: Proposed stock quantity'
 
 class SupplierForm(forms.ModelForm):
     """Form for adding/editing suppliers"""
@@ -40,23 +105,6 @@ class ShopForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-class ProductForm(forms.ModelForm):
-    """Form for adding/editing products"""
-    class Meta:
-        model = Product
-        fields = ['name', 'supplier', 'category', 'current_price', 'proposed_price', 'proposed_stock', 'unit', 'description', 'is_active']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
-            'supplier': forms.Select(attrs={'class': 'form-select'}),
-            'category': forms.Select(attrs={'class': 'form-select'}),
-            'current_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
-            'proposed_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
-            'proposed_stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
-            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Unit (e.g., Kg, Pcs)'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Product Description'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
 class ProductStockForm(forms.ModelForm):
     """Form for managing product stock levels"""
     class Meta:
@@ -77,7 +125,7 @@ class ProductStockForm(forms.ModelForm):
 class BulkUploadForm(forms.Form):
     csv_file = forms.FileField(
         label='Upload CSV File',
-        help_text='CSV should contain: supplier_name, supplier_email, product_name, category_name, current_price, proposed_price, proposed_stock',
+        help_text='CSV should contain: supplier_name, supplier_email, product_name, category_name, current_price, proposed_price, proposed_stock, unit',
         widget=forms.FileInput(attrs={'accept': '.csv', 'class': 'form-control'})
     )
 
