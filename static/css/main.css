@@ -758,3 +758,442 @@ a:hover {
         width: 100%;
     }
 }
+
+/* Enhanced PO Creation Interface Styles */
+
+/* Editable Input Fields */
+.editable-input {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 120px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.editable-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    background-color: #f8faff;
+}
+
+.editable-input:hover {
+    border-color: #bbb;
+    background-color: #fafafa;
+}
+
+.editable-input:invalid {
+    border-color: #e74c3c;
+    background-color: #fff5f5;
+}
+
+/* Total Value Display */
+.total-value {
+    font-weight: bold;
+    color: #27ae60;
+    font-size: 1.1em;
+    padding: 8px 12px;
+    background-color: #f8fff8;
+    border-radius: 6px;
+    border: 1px solid #d4edda;
+    text-align: center;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.total-value.updated {
+    background-color: #e8f5e8;
+    transform: scale(1.05);
+}
+
+/* Unit Badge */
+.unit-badge {
+    background-color: #f8f9fa;
+    color: #495057;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* Price and Stock Displays */
+.price-display {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.95em;
+}
+
+.stock-display {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+/* Enhanced Send PO Button */
+.send-po-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 8px 16px;
+    font-size: 0.9em;
+}
+
+.send-po-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    color: white;
+}
+
+.send-po-btn:disabled {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    transform: none;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.send-po-btn:active {
+    transform: translateY(0);
+}
+
+/* Email Options Styling */
+.email-options {
+    font-size: 0.85em;
+}
+
+.email-options .form-check {
+    margin-bottom: 4px;
+    display: block;
+}
+
+.email-options .form-check-input {
+    margin-top: 0.2em;
+}
+
+.email-options .form-check-label {
+    font-size: 0.85em;
+    color: #495057;
+}
+
+/* Enhanced Table Styling */
+.product-table .table thead th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    font-weight: 600;
+    color: #495057;
+    padding: 15px 12px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 0.9em;
+}
+
+.product-table .table tbody td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    border-color: #e9ecef;
+}
+
+.product-table .table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Product Name Styling */
+.product-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1em;
+}
+
+.product-category {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+/* Checkbox Styling */
+.checkbox-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-check-input:checked {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.form-check-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Modal Enhancements */
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+}
+
+/* Alert Enhancements */
+.alert-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: none;
+    border-left: 4px solid #3498db;
+    color: #1976d2;
+}
+
+.instruction-card {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border: none;
+    border-left: 4px solid #ff9800;
+    border-radius: 8px;
+}
+
+/* Order Summary Card */
+.order-summary-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.order-summary-card .card-body {
+    padding: 1rem;
+}
+
+.order-summary-card h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Selection Summary */
+.selection-summary {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.selection-summary .badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.75em;
+}
+
+.selection-summary .text-success {
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+/* Bulk Action Buttons */
+.bulk-action-btn {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.bulk-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, #219a52 0%, #27ae60 100%);
+    color: white;
+}
+
+.bulk-action-btn:disabled {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    transform: none;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Animation Classes */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pulse {
+    animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Loading States */
+.loading-overlay {
+    position: relative;
+}
+
+.loading-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.loading-overlay.active::after {
+    content: 'Processing...';
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .editable-input {
+        width: 100px;
+        padding: 6px 8px;
+        font-size: 0.9em;
+    }
+    
+    .total-value {
+        font-size: 1em;
+        padding: 6px 8px;
+        min-width: 100px;
+    }
+    
+    .send-po-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+    
+    .product-table .table thead th,
+    .product-table .table tbody td {
+        padding: 8px 6px;
+        font-size: 0.85em;
+    }
+    
+    .email-options {
+        font-size: 0.75em;
+    }
+    
+    .unit-badge {
+        font-size: 0.7em;
+        padding: 1px 6px;
+    }
+}
+
+@media (max-width: 576px) {
+    .editable-input {
+        width: 80px;
+        padding: 4px 6px;
+    }
+    
+    .total-value {
+        font-size: 0.9em;
+        padding: 4px 6px;
+        min-width: 80px;
+    }
+    
+    .product-name {
+        font-size: 0.9em;
+    }
+    
+    .product-category {
+        font-size: 0.8em;
+    }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    .editable-input {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        border-color: #34495e;
+    }
+    
+    .editable-input:focus {
+        background-color: #34495e;
+        border-color: #3498db;
+    }
+    
+    .total-value {
+        background-color: #2c3e50;
+        color: #2ecc71;
+        border-color: #27ae60;
+    }
+    
+    .stock-display {
+        background-color: #34495e;
+        color: #74b9ff;
+    }
+    
+    .unit-badge {
+        background-color: #34495e;
+        color: #bdc3c7;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .send-po-btn,
+    .email-options,
+    .bulk-action-btn {
+        display: none !important;
+    }
+    
+    .editable-input {
+        border: none;
+        background: transparent;
+        font-weight: 600;
+    }
+    
+    .total-value {
+        border: none;
+        background: transparent;
+        font-weight: 700;
+    }
+}

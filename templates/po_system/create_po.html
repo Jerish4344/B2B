@@ -195,7 +195,7 @@
     </div>
 </div>
 
-<!-- Products Modal (same as supplier_search.html) -->
+<!-- Enhanced Products Modal -->
 <div class="modal fade" id="productsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -211,32 +211,90 @@
                     <p class="mt-2">Loading products...</p>
                 </div>
                 <div id="products-content" style="display: none;">
+                    <!-- Instructions -->
                     <div class="alert alert-info mb-3">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Instructions:</strong> Select the products you want to order, adjust quantities as needed, and click "Create Purchase Order" to generate the PO.
+                        <strong>Instructions:</strong> Edit the proposed price and stock quantities as needed. The total value will be calculated automatically. Select products to include in the purchase order.
                     </div>
+                    
+                    <!-- Enhanced Products Table -->
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>
+                                    <th style="width: 5%;">
                                         <div class="form-check">
                                             <input type="checkbox" id="select-all-products" class="form-check-input">
                                             <label class="form-check-label" for="select-all-products">Select All</label>
                                         </div>
                                     </th>
-                                    <th>Product</th>
-                                    <th>Current Price (₹)</th>
-                                    <th>Current Stock</th>
-                                    <th>Proposed Price (₹)</th>
-                                    <th>Proposed Stock</th>
-                                    <th>Total Value (₹)</th>
-                                    <th>Order Quantity</th>
+                                    <th style="width: 25%;">Product</th>
+                                    <th style="width: 12%;">Current Price</th>
+                                    <th style="width: 12%;">Current Stock</th>
+                                    <th style="width: 15%;">Proposed Price *</th>
+                                    <th style="width: 15%;">Proposed Stock *</th>
+                                    <th style="width: 16%;">Total Value</th>
                                 </tr>
                             </thead>
                             <tbody id="products-table-body">
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-calculator me-2"></i>Order Summary
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <strong>Selected Products:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="selected-count" class="badge bg-primary">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <strong>Total Order Value:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="total-order-value" class="text-success fw-bold">₹0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-envelope me-2"></i>Email Recipients
+                                    </h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="email-supplier" checked>
+                                        <label class="form-check-label" for="email-supplier">
+                                            Send to Supplier
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="email-po-dept" checked>
+                                        <label class="form-check-label" for="email-po-dept">
+                                            Send to PO Department
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="email-cat-head" checked>
+                                        <label class="form-check-label" for="email-cat-head">
+                                            CC to Category Heads
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -286,28 +344,42 @@ function loadSupplierProducts(supplierId) {
             'X-Requested-With': 'XMLHttpRequest'
         },
         success: function(data) {
-            $('#supplier-name').text(data.supplier.name);
-            currentProducts = data.products;
-            displayProducts(data.products);
+            console.log('Received data:', data); // Debug log
+            
+            // Check if data has the expected structure
+            if (data && data.supplier && data.products) {
+                $('#supplier-name').text(data.supplier.name || 'Unknown Supplier');
+                currentProducts = data.products;
+                displayProducts(data.products);
+            } else {
+                console.error('Unexpected data structure:', data);
+                alert('Error: Unexpected response format');
+                $('#productsModal').modal('hide');
+                return;
+            }
+            
             $('#products-loading').hide();
             $('#products-content').show();
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', xhr.responseText);
             alert('Error loading products. Please try again.');
             $('#productsModal').modal('hide');
         }
     });
 }
 
-// Display products in table
+// Fixed displayProducts function
 function displayProducts(products) {
     const tbody = $('#products-table-body');
     tbody.empty();
     
-    if (products.length === 0) {
+    console.log('Products data:', products); // Debug log
+    
+    if (!products || products.length === 0) {
         tbody.append(`
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="7" class="text-center py-4">
                     <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
                     <h5>No products available</h5>
                     <p class="text-muted">This supplier doesn't have any products yet.</p>
@@ -321,41 +393,162 @@ function displayProducts(products) {
     }
     
     products.forEach(function(product, index) {
+        console.log('Processing product:', product); // Debug log
+        
+        // Safely access product properties with fallbacks
+        const productId = product.id || '';
+        const productName = product.name || 'Unknown Product';
+        const productCategory = product.category || 'No Category';
+        const productUnit = product.unit || 'units';
+        const currentPrice = parseFloat(product.current_price || 0);
+        const currentStock = product.current_stock || 0;
+        const proposedPrice = parseFloat(product.proposed_price || product.current_price || 0);
+        const proposedStock = parseInt(product.proposed_stock || 10);
+        const totalValue = proposedPrice * proposedStock;
+        
         const row = `
-            <tr>
-                <td>
+            <tr data-product-id="${productId}">
+                <td class="text-center">
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input product-checkbox" 
-                               data-product-id="${product.id}" data-index="${index}">
+                               data-product-id="${productId}" data-index="${index}">
                     </div>
                 </td>
                 <td>
-                    <div>
-                        <strong>${product.name}</strong>
-                        <br><small class="text-muted">${product.category}</small>
+                    <div class="fw-bold product-name">${productName}</div>
+                    <div class="text-muted small product-category">
+                        <i class="fas fa-tag me-1"></i>${productCategory}
+                        <span class="unit-badge ms-2">${productUnit}</span>
                     </div>
                 </td>
-                <td>₹${product.current_price.toFixed(2)}/${product.unit}</td>
-                <td>${product.current_stock} ${product.unit}</td>
-                <td>₹${product.proposed_price.toFixed(2)}/${product.unit}</td>
-                <td>${product.proposed_stock} ${product.unit}</td>
-                <td class="text-success"><strong>₹${product.total_value.toFixed(2)}</strong></td>
-                <td>
-                    <input type="number" class="form-control quantity-input" 
-                           data-product-id="${product.id}" 
+                <td class="text-center">
+                    <div class="price-display">₹${currentPrice.toFixed(2)}/${productUnit}</div>
+                </td>
+                <td class="text-center">
+                    <span class="stock-display">${currentStock} ${productUnit}</span>
+                </td>
+                <td class="text-center">
+                    <input type="number" 
+                           class="editable-input proposed-price" 
+                           data-product-id="${productId}" 
+                           value="${proposedPrice.toFixed(2)}" 
+                           min="0.01" 
+                           step="0.01" 
+                           placeholder="Price">
+                </td>
+                <td class="text-center">
+                    <input type="number" 
+                           class="editable-input proposed-stock" 
+                           data-product-id="${productId}" 
+                           value="${proposedStock}" 
                            min="1" 
-                           value="10" style="width: 100px;">
+                           placeholder="Stock">
+                </td>
+                <td class="text-center">
+                    <div class="total-value" data-product-id="${productId}">₹${formatIndianCurrency(totalValue)}</div>
                 </td>
             </tr>
         `;
         tbody.append(row);
     });
+    
+    // Initialize event listeners and calculations after adding all rows
+    initializeProductTable();
 }
 
-// Select all products
-$('#select-all-products').on('change', function() {
-    $('.product-checkbox').prop('checked', this.checked);
-});
+function initializeProductTable() {
+    // Update total values on page load
+    updateAllTotalValues();
+    updateOrderSummary();
+    
+    // Add event listeners for price and stock inputs
+    $('.proposed-price, .proposed-stock').off('input').on('input', function() {
+        const productId = $(this).data('product-id');
+        updateTotalValue(productId);
+        updateOrderSummary();
+    });
+    
+    // Format input on blur
+    $('.proposed-price').off('blur').on('blur', function() {
+        const value = parseFloat($(this).val()) || 0;
+        $(this).val(value.toFixed(2));
+        const productId = $(this).data('product-id');
+        updateTotalValue(productId);
+    });
+    
+    // Add event listeners for checkboxes
+    $('.product-checkbox').off('change').on('change', function() {
+        updateOrderSummary();
+    });
+    
+    // Select all functionality
+    $('#select-all-products').off('change').on('change', function() {
+        $('.product-checkbox').prop('checked', this.checked);
+        updateOrderSummary();
+    });
+}
+
+function updateTotalValue(productId) {
+    const priceInput = $(`.proposed-price[data-product-id="${productId}"]`);
+    const stockInput = $(`.proposed-stock[data-product-id="${productId}"]`);
+    const totalDisplay = $(`.total-value[data-product-id="${productId}"]`);
+    
+    const price = parseFloat(priceInput.val()) || 0;
+    const stock = parseInt(stockInput.val()) || 0;
+    const total = price * stock;
+    
+    // Format total with Indian number system
+    totalDisplay.text(`₹${formatIndianCurrency(total)}`);
+    
+    // Add visual feedback for changes
+    totalDisplay.css('background', '#e8f5e8');
+    setTimeout(() => {
+        totalDisplay.css('background', '#f8fff8');
+    }, 300);
+}
+
+function updateAllTotalValues() {
+    $('.product-checkbox').each(function() {
+        const productId = $(this).data('product-id');
+        updateTotalValue(productId);
+    });
+}
+
+function updateOrderSummary() {
+    const selectedCheckboxes = $('.product-checkbox:checked');
+    const selectedCount = selectedCheckboxes.length;
+    
+    let totalOrderValue = 0;
+    selectedCheckboxes.each(function() {
+        const productId = $(this).data('product-id');
+        const priceInput = $(`.proposed-price[data-product-id="${productId}"]`);
+        const stockInput = $(`.proposed-stock[data-product-id="${productId}"]`);
+        
+        const price = parseFloat(priceInput.val()) || 0;
+        const stock = parseInt(stockInput.val()) || 0;
+        totalOrderValue += (price * stock);
+    });
+    
+    $('#selected-count').text(selectedCount);
+    $('#total-order-value').text(`₹${formatIndianCurrency(totalOrderValue)}`);
+    
+    // Update button state
+    const createButton = $('button[onclick="createPurchaseOrder()"]');
+    if (selectedCount > 0) {
+        createButton.prop('disabled', false);
+        createButton.html('<i class="fas fa-file-invoice me-1"></i>Create Purchase Order');
+    } else {
+        createButton.prop('disabled', true);
+        createButton.html('<i class="fas fa-file-invoice me-1"></i>Select Products to Continue');
+    }
+}
+
+function formatIndianCurrency(number) {
+    return new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(number);
+}
 
 // Create Purchase Order
 function createPurchaseOrder() {
@@ -363,20 +556,32 @@ function createPurchaseOrder() {
     
     $('.product-checkbox:checked').each(function() {
         const productId = $(this).data('product-id');
-        const quantity = $(`.quantity-input[data-product-id="${productId}"]`).val();
+        const priceInput = $(`.proposed-price[data-product-id="${productId}"]`);
+        const stockInput = $(`.proposed-stock[data-product-id="${productId}"]`);
         
-        if (quantity > 0) {
+        const price = parseFloat(priceInput.val()) || 0;
+        const quantity = parseInt(stockInput.val()) || 0;
+        
+        if (price > 0 && quantity > 0) {
             selectedProducts.push({
                 id: productId,
-                quantity: parseInt(quantity)
+                quantity: quantity,
+                unit_price: price
             });
         }
     });
     
     if (selectedProducts.length === 0) {
-        alert('Please select at least one product.');
+        alert('Please select at least one product and ensure all have valid price and quantity.');
         return;
     }
+    
+    // Get email options
+    const emailOptions = {
+        to_supplier: $('#email-supplier').is(':checked'),
+        to_po_dept: $('#email-po-dept').is(':checked'),
+        to_cat_head: $('#email-cat-head').is(':checked')
+    };
     
     // Show loading
     const createButton = $('button[onclick="createPurchaseOrder()"]');
@@ -393,11 +598,13 @@ function createPurchaseOrder() {
         },
         data: JSON.stringify({
             supplier_id: currentSupplierId,
-            products: selectedProducts
+            products: selectedProducts,
+            email_options: emailOptions
         }),
         success: function(response) {
             if (response.success) {
-                alert(`Purchase Order ${response.po_number} created successfully!`);
+                const totalValue = selectedProducts.reduce((sum, product) => sum + (product.quantity * product.unit_price), 0);
+                alert(`Purchase Order ${response.po_number} created successfully!\n\nProducts: ${selectedProducts.length}\nTotal Value: ₹${formatIndianCurrency(totalValue)}\n\n${response.message}`);
                 $('#productsModal').modal('hide');
                 // Redirect to PO details or list
                 window.location.href = '{% url "po_system:purchase_orders" %}';
@@ -424,4 +631,77 @@ $.ajaxSetup({
     }
 });
 </script>
+
+<style>
+/* Add these styles to make the editable inputs work properly */
+.editable-input {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 120px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.editable-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    background-color: #f8faff;
+}
+
+.editable-input:hover {
+    border-color: #bbb;
+    background-color: #fafafa;
+}
+
+.total-value {
+    font-weight: bold;
+    color: #27ae60;
+    font-size: 1.1em;
+    padding: 8px 12px;
+    background-color: #f8fff8;
+    border-radius: 6px;
+    border: 1px solid #d4edda;
+    text-align: center;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.unit-badge {
+    background-color: #f8f9fa;
+    color: #495057;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.price-display {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.95em;
+}
+
+.stock-display {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.product-category {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+</style>
 {% endblock %}

@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'po_system',
+    'reportlab'
 ]
 
 # Email Configuration using Zepto Mail SMTP (SSL Certificate Fix)
@@ -63,7 +64,7 @@ ZEPTO_FROM_NAME = 'Jeyarama Company'
 COMPANY_NAME = 'Jeyarama Company'
 COMPANY_PHONE = '+91 9944406089'
 COMPANY_EMAIL = 'info@jeyarama.com'
-PO_DEPARTMENT_EMAIL = 'anubha@jeyarama.com'
+PO_DEPARTMENT_EMAIL = 'jerish@jcrc.in'
 
 # Email timeout settings
 EMAIL_TIMEOUT = 60

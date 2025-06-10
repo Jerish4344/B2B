@@ -82,3 +82,10 @@ INFO 2025-06-09 09:54:19,615 email_backends 86013 6155644928 Authenticating with
 INFO 2025-06-09 09:54:19,713 email_backends 86013 6155644928 Authentication successful
 INFO 2025-06-09 09:54:20,075 email_backends 86013 6155644928 SMTP connection closed gracefully
 INFO 2025-06-09 09:54:20,083 email_service 86013 6155644928 PO 2025060909541978E07FA8 sent via SMTP to ['jerish220@gmail.com', 'anubha@jeyarama.com', 'Asaithambi@yahoo.com']
+INFO 2025-06-09 10:25:47,602 email_backends 87515 6168604672 Connecting to smtp.zeptomail.in:587 with user emailapikey
+INFO 2025-06-09 10:25:48,256 email_backends 87515 6168604672 Starting TLS connection...
+INFO 2025-06-09 10:25:48,551 email_backends 87515 6168604672 TLS connection established
+INFO 2025-06-09 10:25:48,552 email_backends 87515 6168604672 Authenticating with username: emailapikey
+INFO 2025-06-09 10:25:48,676 email_backends 87515 6168604672 Authentication successful
+INFO 2025-06-09 10:25:49,218 email_backends 87515 6168604672 SMTP connection closed gracefully
+INFO 2025-06-09 10:25:49,224 email_service 87515 6168604672 PO 20250609102547447D1253 sent via SMTP to ['jerish220@gmail.com']

@@ -154,32 +154,62 @@ def supplier_search(request):
 
 @login_required
 def supplier_products(request, supplier_id):
-    """Get products for a specific supplier"""
+    """Enhanced supplier products view with better data structure"""
     supplier = get_object_or_404(Supplier, id=supplier_id, is_active=True)
-    products = Product.objects.filter(supplier=supplier, is_active=True).select_related('category')
+    products = Product.objects.filter(
+        supplier=supplier, 
+        is_active=True
+    ).select_related('category').order_by('name')
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        data = {
-            'supplier': {
-                'id': supplier.id,
-                'name': supplier.name,
-                'email': supplier.email,
-            },
-            'products': [
-                {
+        # Enhanced JSON response with all necessary data
+        try:
+            products_data = []
+            for product in products:
+                # Safely handle None values
+                current_price = float(product.current_price) if product.current_price else 0.0
+                proposed_price = float(product.proposed_price) if product.proposed_price else current_price
+                current_stock = product.current_stock if product.current_stock is not None else 0
+                proposed_stock = product.proposed_stock if product.proposed_stock is not None else 10
+                
+                product_data = {
                     'id': product.id,
-                    'name': product.name,
-                    'current_price': float(product.current_price),
-                    'proposed_price': float(product.proposed_price),
-                    'current_stock': product.current_stock,
-                    'proposed_stock': product.proposed_stock,
-                    'total_value': float(product.total_value),
-                    'unit': product.unit,
-                    'category': product.category.name,
-                } for product in products
-            ]
-        }
-        return JsonResponse(data)
+                    'name': product.name or 'Unknown Product',
+                    'current_price': current_price,
+                    'proposed_price': proposed_price,
+                    'current_stock': current_stock,
+                    'proposed_stock': proposed_stock,
+                    'total_value': proposed_price * proposed_stock,
+                    'unit': product.unit or 'units',
+                    'category': product.category.name if product.category else 'No Category',
+                    'description': product.description or '',
+                }
+                products_data.append(product_data)
+            
+            data = {
+                'supplier': {
+                    'id': supplier.id,
+                    'name': supplier.name or 'Unknown Supplier',
+                    'email': supplier.email or '',
+                    'contact_person': supplier.contact_person or '',
+                    'phone': supplier.phone or '',
+                    'address': supplier.address or '',
+                },
+                'products': products_data
+            }
+            
+            return JsonResponse(data)
+            
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in supplier_products AJAX: {str(e)}")
+            
+            return JsonResponse({
+                'error': 'Failed to load products',
+                'message': str(e)
+            }, status=500)
     
     return render(request, 'po_system/supplier_products.html', {
         'supplier': supplier,
@@ -1186,7 +1216,7 @@ def confirm_po(request, po_id):
 @login_required
 @csrf_exempt
 def send_purchase_order(request):
-    """Send purchase order via email using enhanced email service"""
+    """Enhanced send purchase order via email using enhanced email service"""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -1200,6 +1230,10 @@ def send_purchase_order(request):
             
             supplier = get_object_or_404(Supplier, id=supplier_id)
             
+            # Validate that we have products
+            if not selected_products:
+                return JsonResponse({'success': False, 'error': 'No products selected'})
+            
             # Create Purchase Order
             po = PurchaseOrder.objects.create(
                 supplier=supplier,
@@ -1208,20 +1242,42 @@ def send_purchase_order(request):
             )
             
             total_amount = 0
-            for product_data in selected_products:
-                product = get_object_or_404(Product, id=product_data['id'])
-                quantity = int(product_data['quantity'])
-                unit_price = float(product_data.get('unit_price', product.proposed_price))
-                
-                PurchaseOrderItem.objects.create(
-                    purchase_order=po,
-                    product=product,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    total_price=quantity * unit_price
-                )
-                total_amount += quantity * unit_price
+            created_items = []
             
+            # Process each selected product
+            for product_data in selected_products:
+                try:
+                    product = get_object_or_404(Product, id=product_data['id'])
+                    quantity = int(product_data['quantity'])
+                    unit_price = Decimal(str(product_data.get('unit_price', product.proposed_price or product.current_price)))
+                    
+                    # Validate input
+                    if quantity <= 0:
+                        raise ValueError(f"Invalid quantity for {product.name}")
+                    if unit_price <= 0:
+                        raise ValueError(f"Invalid price for {product.name}")
+                    
+                    # Create PO item
+                    po_item = PurchaseOrderItem.objects.create(
+                        purchase_order=po,
+                        product=product,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        total_price=quantity * unit_price
+                    )
+                    
+                    total_amount += po_item.total_price
+                    created_items.append(po_item)
+                    
+                except (ValueError, TypeError, Product.DoesNotExist) as e:
+                    # If any product fails, delete the PO and return error
+                    po.delete()
+                    return JsonResponse({
+                        'success': False, 
+                        'error': f'Error processing product: {str(e)}'
+                    })
+            
+            # Update PO total amount
             po.total_amount = total_amount
             po.save()
             
@@ -1229,23 +1285,27 @@ def send_purchase_order(request):
             success, message = email_service.send_po_email(po, email_options)
             
             if success:
-                messages.success(request, f'Purchase Order {po.po_number} created and sent successfully!')
                 return JsonResponse({
                     'success': True, 
                     'po_number': po.po_number,
-                    'message': message
+                    'message': message,
+                    'total_amount': float(total_amount),
+                    'items_count': len(created_items)
                 })
             else:
                 # Even if email fails, PO is created
-                messages.warning(request, f'Purchase Order {po.po_number} created but email sending failed: {message}')
                 return JsonResponse({
                     'success': True, 
                     'po_number': po.po_number,
-                    'warning': f'PO created but email failed: {message}'
+                    'warning': f'PO created but email failed: {message}',
+                    'total_amount': float(total_amount),
+                    'items_count': len(created_items)
                 })
                 
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            return JsonResponse({'success': False, 'error': f'Unexpected error: {str(e)}'})
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
@@ -1348,46 +1408,77 @@ def email_settings_view(request):
 
 @login_required
 def product_suggestions_api(request):
-    """API endpoint for product name suggestions"""
+    """Enhanced API endpoint for product name suggestions with better search"""
     query = request.GET.get('q', '').strip()
     
-    if len(query) < 1:  # Changed from 2 to 1 to show results faster
+    if len(query) < 1:
         return JsonResponse({'products': []})
     
     try:
-        # Search for products with similar names
+        # Enhanced search for products with better matching
         products = Product.objects.filter(
-            name__icontains=query,
+            Q(name__icontains=query) | Q(description__icontains=query),
             is_active=True
-        ).select_related('category', 'supplier').distinct()[:15]
+        ).select_related('category', 'supplier').distinct()[:20]
         
-        # Group products by name to avoid duplicates
-        product_names = {}
+        # Group products by name to show supplier variations
+        product_groups = {}
         for product in products:
-            name = product.name
-            if name not in product_names:
-                product_names[name] = {
-                    'name': name,
+            name = product.name.lower().strip()
+            if name not in product_groups:
+                product_groups[name] = {
+                    'name': product.name,
                     'category': product.category.name,
                     'unit': product.unit,
                     'suppliers': [],
-                    'supplier_count': 0
+                    'price_range': {'min': float(product.current_price), 'max': float(product.current_price)},
+                    'avg_price': float(product.current_price),
+                    'total_suppliers': 0
                 }
-            product_names[name]['suppliers'].append(product.supplier.name)
+            
+            # Add supplier info
+            product_groups[name]['suppliers'].append({
+                'name': product.supplier.name,
+                'price': float(product.current_price),
+                'proposed_price': float(product.proposed_price) if product.proposed_price else None,
+                'stock': product.current_stock
+            })
+            
+            # Update price range
+            current_price = float(product.current_price)
+            if current_price < product_groups[name]['price_range']['min']:
+                product_groups[name]['price_range']['min'] = current_price
+            if current_price > product_groups[name]['price_range']['max']:
+                product_groups[name]['price_range']['max'] = current_price
         
-        # Format response
+        # Format response with enhanced data
         suggestions = []
-        for name, data in product_names.items():
-            data['supplier_count'] = len(data['suppliers'])
-            data['suppliers'] = ', '.join(data['suppliers'][:3])  # Show first 3 suppliers
+        for name, data in product_groups.items():
+            data['total_suppliers'] = len(data['suppliers'])
+            # Calculate average price
+            total_price = sum(s['price'] for s in data['suppliers'])
+            data['avg_price'] = total_price / len(data['suppliers'])
+            
+            # Format supplier names for display
+            supplier_names = [s['name'] for s in data['suppliers'][:3]]
             if len(data['suppliers']) > 3:
-                data['suppliers'] += f' and {len(data["suppliers"]) - 3} more'
+                data['suppliers_display'] = ', '.join(supplier_names) + f' and {len(data["suppliers"]) - 3} more'
+            else:
+                data['suppliers_display'] = ', '.join(supplier_names)
+                
             suggestions.append(data)
         
-        return JsonResponse({'products': suggestions})
+        # Sort by relevance (exact matches first, then by supplier count)
+        suggestions.sort(key=lambda x: (
+            0 if query.lower() in x['name'].lower() else 1,
+            -x['total_suppliers'],
+            x['name'].lower()
+        ))
+        
+        return JsonResponse({'products': suggestions[:15]})
         
     except Exception as e:
-        print(f"Error in product_suggestions_api: {e}")  # For debugging
+        logger.error(f"Error in product_suggestions_api: {e}")
         return JsonResponse({'products': [], 'error': str(e)})
 
 @login_required 
@@ -1412,37 +1503,67 @@ def check_product_duplicate(request):
     
 @login_required
 def product_search_api(request):
-    """API endpoint for product autocomplete search"""
+    """Enhanced API endpoint for product autocomplete search"""
     query = request.GET.get('q', '').strip()
+    supplier_id = request.GET.get('supplier_id', '')
     
     if len(query) < 1:
         return JsonResponse({'products': []})
     
-    # Search products by name, description, or supplier name
-    products = Product.objects.filter(
-        Q(name__icontains=query) |
-        Q(description__icontains=query) |
-        Q(supplier__name__icontains=query),
-        is_active=True
-    ).select_related('supplier', 'category')[:10]  # Limit to 10 results
-    
-    product_data = []
-    for product in products:
-        product_data.append({
-            'id': product.id,
-            'name': product.name,
-            'description': product.description or f"{product.name} - {product.unit}",
-            'suppliers': [product.supplier.name],
-            'category': product.category.name,
-            'supplier_id': product.supplier.id,
-            'category_id': product.category.id,
-            'unit': product.unit,
-            'current_price': float(product.current_price),
-            'proposed_price': float(product.proposed_price),
+    try:
+        # Base query
+        products_query = Product.objects.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(supplier__name__icontains=query),
+            is_active=True
+        ).select_related('supplier', 'category')
+        
+        # Filter by supplier if provided
+        if supplier_id:
+            try:
+                supplier_id = int(supplier_id)
+                products_query = products_query.filter(supplier_id=supplier_id)
+            except (ValueError, TypeError):
+                pass
+        
+        products = products_query.order_by('name')[:15]
+        
+        product_data = []
+        for product in products:
+            product_data.append({
+                'id': product.id,
+                'name': product.name,
+                'description': product.description or f"{product.name} - {product.unit}",
+                'supplier': {
+                    'id': product.supplier.id,
+                    'name': product.supplier.name,
+                },
+                'category': {
+                    'id': product.category.id,
+                    'name': product.category.name,
+                },
+                'unit': product.unit,
+                'current_price': float(product.current_price),
+                'proposed_price': float(product.proposed_price) if product.proposed_price else float(product.current_price),
+                'current_stock': product.current_stock,
+                'proposed_stock': product.proposed_stock if product.proposed_stock else 10,
+                'total_value': float((product.proposed_price or product.current_price) * (product.proposed_stock or 10)),
+                'is_available': product.is_active,
+            })
+        
+        return JsonResponse({
+            'products': product_data,
+            'total': len(product_data),
+            'query': query,
+            'supplier_filtered': bool(supplier_id)
         })
-    
-    return JsonResponse({
-        'products': product_data,
-        'total': len(product_data),
-        'query': query
-    })
+        
+    except Exception as e:
+        logger.error(f"Error in product_search_api: {e}")
+        return JsonResponse({
+            'products': [], 
+            'error': str(e),
+            'total': 0,
+            'query': query
+        })

@@ -25,6 +25,16 @@
         </div>
     </div>
 
+    <!-- Instructions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Instructions:</strong> Edit the proposed price and stock quantities as needed. The total value will be calculated automatically. Select products and click "SEND PO" to create a purchase order.
+            </div>
+        </div>
+    </div>
+
     <!-- Search Bar -->
     <div class="row mb-4">
         <div class="col-12">
@@ -34,7 +44,7 @@
                         <i class="fas fa-search"></i>
                     </span>
                     <input type="text" id="productSearchInput" class="form-control search-input" 
-                           placeholder="Search the Supplier name" onkeyup="filterProducts()">
+                           placeholder="Search products..." onkeyup="filterProducts()">
                 </div>
             </div>
         </div>
@@ -48,66 +58,94 @@
                     <table class="table table-hover" id="productsTable">
                         <thead>
                             <tr class="text-center">
+                                <th>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="select-all-products" class="form-check-input">
+                                        <label class="form-check-label" for="select-all-products">All</label>
+                                    </div>
+                                </th>
                                 <th>Product</th>
-                                <th>Current Price<br>(Per Kg)</th>
-                                <th>Current Stock<br>(in Kg)</th>
-                                <th>Proposed Price<br>(Per Kg)</th>
-                                <th>Proposed Stock<br>(in Kg)</th>
+                                <th>Current Price</th>
+                                <th>Current Stock</th>
+                                <th>Proposed Price *</th>
+                                <th>Proposed Stock *</th>
                                 <th>Total Value</th>
+                                <th>Email Options</th>
                                 <th>Action</th>
-                                <th>to Supplier</th>
-                                <th>to PO Department</th>
-                                <th>cc to Cat Head</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for product in products %}
-                            <tr class="text-center">
-                                <td class="text-start">{{ product.name }}</td>
-                                <td>₹{{ product.current_price }}</td>
-                                <td>{{ product.current_stock }}</td>
+                            <tr class="text-center" data-product-id="{{ product.id }}">
                                 <td>
-                                    <input type="number" class="form-control proposed-price" 
-                                           data-product-id="{{ product.id }}" 
-                                           value="{{ product.proposed_price }}" 
-                                           min="0.01" step="0.01" style="width: 120px; margin: 0 auto;">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox" class="form-check-input product-checkbox" 
+                                               data-product-id="{{ product.id }}">
+                                    </div>
+                                </td>
+                                <td class="text-start">
+                                    <div class="fw-bold">{{ product.name }}</div>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-tag me-1"></i>{{ product.category.name }}
+                                        <span class="unit-badge ms-2">{{ product.unit }}</span>
+                                    </div>
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control proposed-stock" 
-                                           data-product-id="{{ product.id }}" 
-                                           value="{{ product.proposed_stock }}" 
-                                           min="1" style="width: 120px; margin: 0 auto;">
+                                    <div class="price-display">₹{{ product.current_price }}/{{ product.unit }}</div>
                                 </td>
-                                <td class="total-value">₹{{ product.total_value }}</td>
+                                <td>
+                                    <span class="stock-display">{{ product.current_stock }} {{ product.unit }}</span>
+                                </td>
+                                <td>
+                                    <input type="number" class="editable-input proposed-price" 
+                                           data-product-id="{{ product.id }}" 
+                                           value="{{ product.proposed_price|default:product.current_price }}" 
+                                           min="0.01" step="0.01">
+                                </td>
+                                <td>
+                                    <input type="number" class="editable-input proposed-stock" 
+                                           data-product-id="{{ product.id }}" 
+                                           value="{{ product.proposed_stock|default:10 }}" 
+                                           min="1">
+                                </td>
+                                <td>
+                                    <div class="total-value" data-product-id="{{ product.id }}">₹0.00</div>
+                                </td>
+                                <td>
+                                    <div class="email-options">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="toSupplier{{ product.id }}" checked>
+                                            <label class="form-check-label small" for="toSupplier{{ product.id }}">
+                                                Supplier
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="toPODept{{ product.id }}" checked>
+                                            <label class="form-check-label small" for="toPODept{{ product.id }}">
+                                                PO Dept
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="toCatHead{{ product.id }}" checked>
+                                            <label class="form-check-label small" for="toCatHead{{ product.id }}">
+                                                Cat Head
+                                            </label>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>
                                     <button class="btn btn-primary send-po-btn" 
-                                            data-product-id="{{ product.id }}"
-                                            style="background-color: purple; border-color: purple;">
-                                        SEND PO
+                                            data-product-id="{{ product.id }}">
+                                        <i class="fas fa-paper-plane me-1"></i>SEND PO
                                     </button>
-                                </td>
-                                <td>
-                                    <div class="form-check d-flex justify-content-center">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="toSupplier{{ product.id }}" checked>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="form-check d-flex justify-content-center">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="toPODept{{ product.id }}" checked>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="form-check d-flex justify-content-center">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="toCatHead{{ product.id }}" checked>
-                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="10" class="text-center py-4">
+                                <td colspan="9" class="text-center py-4">
                                     <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
                                     <h4>No products found for this supplier</h4>
                                     <p class="text-muted">Try adding products through the bulk upload feature</p>
@@ -121,183 +159,562 @@
         </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <div class="modal fade" id="confirmPOModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Purchase Order</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to send a purchase order for:</p>
-                    <p><strong id="confirm-product-name"></strong></p>
-                    <p>Quantity: <span id="confirm-quantity"></span> Kg</p>
-                    <p>Price: ₹<span id="confirm-price"></span> per Kg</p>
-                    <p>Total Value: ₹<span id="confirm-total"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="send-po-confirm">
-                        <i class="fas fa-paper-plane me-1"></i>Send Purchase Order
-                    </button>
+    <!-- Bulk Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-2">
+                                <i class="fas fa-calculator me-2"></i>Selection Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Selected Products:</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span id="selected-count" class="badge bg-primary">0</span>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <strong>Total Value:</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span id="total-selection-value" class="text-success fw-bold">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button type="button" class="btn btn-success me-2" onclick="sendBulkPO()" disabled id="bulk-send-btn">
+                                <i class="fas fa-paper-plane me-1"></i>Send Bulk PO for Selected
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearSelection()">
+                                <i class="fas fa-times me-1"></i>Clear Selection
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmPOModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-invoice me-2"></i>Confirm Purchase Order
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="single-product-confirm" style="display: none;">
+                    <p>Are you sure you want to send a purchase order for:</p>
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 id="confirm-product-name"></h6>
+                            <div class="row">
+                                <div class="col-4">
+                                    <strong>Quantity:</strong><br>
+                                    <span id="confirm-quantity"></span>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Unit Price:</strong><br>
+                                    ₹<span id="confirm-price"></span>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Total Value:</strong><br>
+                                    <span class="text-success fw-bold">₹<span id="confirm-total"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="bulk-products-confirm" style="display: none;">
+                    <p>Are you sure you want to send a purchase order for the following products:</p>
+                    <div id="bulk-products-list" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <!-- Products will be listed here -->
+                    </div>
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Total Products:</strong> <span id="bulk-confirm-count"></span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Total Value:</strong> <span class="text-success fw-bold" id="bulk-confirm-total"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="send-po-confirm">
+                    <i class="fas fa-paper-plane me-1"></i>Send Purchase Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.editable-input {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 120px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.editable-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    background-color: #f8faff;
+}
+
+.editable-input:hover {
+    border-color: #bbb;
+}
+
+.total-value {
+    font-weight: bold;
+    color: #27ae60;
+    font-size: 1.1em;
+    padding: 8px 12px;
+    background-color: #f8fff8;
+    border-radius: 6px;
+    border: 1px solid #d4edda;
+}
+
+.unit-badge {
+    background-color: #f8f9fa;
+    color: #495057;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.price-display {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.stock-display {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.send-po-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.send-po-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.send-po-btn:disabled {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    transform: none;
+    cursor: not-allowed;
+}
+
+.email-options {
+    font-size: 0.85em;
+}
+
+.email-options .form-check {
+    margin-bottom: 2px;
+}
+
+.email-options .form-check-input {
+    margin-top: 0.1em;
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // CSRF token setup for AJAX
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+// CSRF token setup for AJAX
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
-    const csrftoken = getCookie('csrftoken');
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
 
-    // Update total value when inputs change
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    // Update total values on page load
+    updateAllTotalValues();
+    updateSelectionSummary();
+    
+    // Add event listeners for price and stock inputs
     document.querySelectorAll('.proposed-price, .proposed-stock').forEach(input => {
-        input.addEventListener('change', updateTotalValue);
+        input.addEventListener('input', function() {
+            const productId = this.dataset.productId;
+            updateTotalValue(productId);
+            updateSelectionSummary();
+        });
+        
+        // Format input on blur
+        input.addEventListener('blur', function() {
+            if (this.classList.contains('proposed-price')) {
+                const value = parseFloat(this.value) || 0;
+                this.value = value.toFixed(2);
+            }
+        });
     });
+    
+    // Add event listeners for checkboxes
+    document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionSummary);
+    });
+    
+    // Select all functionality
+    document.getElementById('select-all-products').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectionSummary();
+    });
+});
 
-    function updateTotalValue(e) {
-        const productId = e.target.dataset.productId;
+function updateTotalValue(productId) {
+    const priceInput = document.querySelector(`.proposed-price[data-product-id="${productId}"]`);
+    const stockInput = document.querySelector(`.proposed-stock[data-product-id="${productId}"]`);
+    const totalDisplay = document.querySelector(`.total-value[data-product-id="${productId}"]`);
+    
+    const price = parseFloat(priceInput.value) || 0;
+    const stock = parseInt(stockInput.value) || 0;
+    const total = price * stock;
+    
+    // Format total with Indian number system
+    totalDisplay.textContent = `₹${formatIndianCurrency(total)}`;
+    
+    // Add visual feedback for changes
+    totalDisplay.style.background = '#e8f5e8';
+    setTimeout(() => {
+        totalDisplay.style.background = '#f8fff8';
+    }, 300);
+}
+
+function updateAllTotalValues() {
+    document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+        const productId = checkbox.dataset.productId;
+        updateTotalValue(productId);
+    });
+}
+
+function updateSelectionSummary() {
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    const selectedCount = selectedCheckboxes.length;
+    
+    let totalSelectionValue = 0;
+    selectedCheckboxes.forEach(checkbox => {
+        const productId = checkbox.dataset.productId;
         const priceInput = document.querySelector(`.proposed-price[data-product-id="${productId}"]`);
         const stockInput = document.querySelector(`.proposed-stock[data-product-id="${productId}"]`);
-        const totalCell = priceInput.closest('tr').querySelector('.total-value');
         
         const price = parseFloat(priceInput.value) || 0;
         const stock = parseInt(stockInput.value) || 0;
-        const total = price * stock;
-        
-        totalCell.textContent = `₹${total.toFixed(2)}`;
-    }
+        totalSelectionValue += (price * stock);
+    });
+    
+    document.getElementById('selected-count').textContent = selectedCount;
+    document.getElementById('total-selection-value').textContent = `₹${formatIndianCurrency(totalSelectionValue)}`;
+    
+    // Update bulk send button state
+    const bulkSendBtn = document.getElementById('bulk-send-btn');
+    bulkSendBtn.disabled = selectedCount === 0;
+}
 
-    // Filter products
-    function filterProducts() {
-        const input = document.getElementById('productSearchInput');
-        const filter = input.value.toUpperCase();
-        const table = document.getElementById('productsTable');
-        const rows = table.getElementsByTagName('tr');
+function formatIndianCurrency(number) {
+    return new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(number);
+}
 
-        for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
-            const productNameCell = rows[i].getElementsByTagName('td')[0];
-            if (productNameCell) {
-                const productName = productNameCell.textContent || productNameCell.innerText;
-                if (productName.toUpperCase().indexOf(filter) > -1) {
-                    rows[i].style.display = '';
-                } else {
-                    rows[i].style.display = 'none';
-                }
+// Filter products
+function filterProducts() {
+    const input = document.getElementById('productSearchInput');
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById('productsTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+        const productNameCell = rows[i].getElementsByTagName('td')[1];
+        if (productNameCell) {
+            const productName = productNameCell.textContent || productNameCell.innerText;
+            if (productName.toUpperCase().indexOf(filter) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
             }
         }
     }
+}
 
-    // Send PO button click
-    document.querySelectorAll('.send-po-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const row = this.closest('tr');
-            const productName = row.cells[0].textContent;
-            const priceInput = row.querySelector('.proposed-price');
-            const stockInput = row.querySelector('.proposed-stock');
-            
-            const price = parseFloat(priceInput.value);
-            const stock = parseInt(stockInput.value);
-            const total = price * stock;
-            
-            // Update confirmation modal
-            document.getElementById('confirm-product-name').textContent = productName;
-            document.getElementById('confirm-quantity').textContent = stock;
-            document.getElementById('confirm-price').textContent = price.toFixed(2);
-            document.getElementById('confirm-total').textContent = total.toFixed(2);
-            
-            // Store data for submission
-            document.getElementById('send-po-confirm').dataset.productId = productId;
-            document.getElementById('send-po-confirm').dataset.price = price;
-            document.getElementById('send-po-confirm').dataset.stock = stock;
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('confirmPOModal'));
-            modal.show();
-        });
-    });
-
-    // Confirm send PO
-    document.getElementById('send-po-confirm').addEventListener('click', function() {
+// Send PO for individual product
+document.querySelectorAll('.send-po-btn').forEach(button => {
+    button.addEventListener('click', function() {
         const productId = this.dataset.productId;
-        const price = parseFloat(this.dataset.price);
-        const quantity = parseInt(this.dataset.stock);
+        const row = this.closest('tr');
+        const productName = row.querySelector('.fw-bold').textContent;
+        const priceInput = row.querySelector('.proposed-price');
+        const stockInput = row.querySelector('.proposed-stock');
         
-        // Get email recipients
-        const toSupplier = document.getElementById(`toSupplier${productId}`).checked;
-        const toPODept = document.getElementById(`toPODept${productId}`).checked;
-        const toCatHead = document.getElementById(`toCatHead${productId}`).checked;
+        const price = parseFloat(priceInput.value);
+        const stock = parseInt(stockInput.value);
+        const total = price * stock;
         
-        // Disable button and show loading
-        this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+        if (price <= 0 || stock <= 0) {
+            alert('Please enter valid price and stock values.');
+            return;
+        }
         
-        // Send AJAX request
-        fetch('{% url "po_system:send_po" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                supplier_id: {{ supplier.id }},
-                products: [{
-                    id: productId,
-                    quantity: quantity,
-                    unit_price: price,
-                    to_supplier: toSupplier,
-                    to_po_dept: toPODept,
-                    to_cat_head: toCatHead
-                }]
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Hide modal
-                bootstrap.Modal.getInstance(document.getElementById('confirmPOModal')).hide();
-                
-                // Show success message
-                alert(`Purchase Order ${data.po_number} sent successfully!`);
-                
-                // Disable the send button for this product
-                const button = document.querySelector(`.send-po-btn[data-product-id="${productId}"]`);
-                button.disabled = true;
-                button.innerHTML = '<i class="fas fa-check me-1"></i>Sent';
-                button.classList.remove('btn-primary');
-                button.classList.add('btn-success');
-            } else {
-                alert('Error: ' + data.error);
-            }
-        })
-        .catch(error => {
-            alert('Error sending purchase order. Please try again.');
-            console.error('Error:', error);
-        })
-        .finally(() => {
-            // Reset button
-            this.disabled = false;
-            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send Purchase Order';
+        // Show single product confirmation
+        document.getElementById('single-product-confirm').style.display = 'block';
+        document.getElementById('bulk-products-confirm').style.display = 'none';
+        
+        // Update confirmation modal
+        document.getElementById('confirm-product-name').textContent = productName;
+        document.getElementById('confirm-quantity').textContent = `${stock}`;
+        document.getElementById('confirm-price').textContent = price.toFixed(2);
+        document.getElementById('confirm-total').textContent = formatIndianCurrency(total);
+        
+        // Store data for submission
+        document.getElementById('send-po-confirm').dataset.productId = productId;
+        document.getElementById('send-po-confirm').dataset.isBulk = 'false';
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('confirmPOModal'));
+        modal.show();
+    });
+});
+
+// Send bulk PO
+function sendBulkPO() {
+    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Please select at least one product.');
+        return;
+    }
+    
+    // Validate all selected products
+    let isValid = true;
+    const products = [];
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const productId = checkbox.dataset.productId;
+        const row = checkbox.closest('tr');
+        const productName = row.querySelector('.fw-bold').textContent;
+        const priceInput = row.querySelector('.proposed-price');
+        const stockInput = row.querySelector('.proposed-stock');
+        
+        const price = parseFloat(priceInput.value);
+        const stock = parseInt(stockInput.value);
+        
+        if (price <= 0 || stock <= 0) {
+            isValid = false;
+            return;
+        }
+        
+        products.push({
+            id: productId,
+            name: productName,
+            price: price,
+            stock: stock,
+            total: price * stock
         });
     });
+    
+    if (!isValid) {
+        alert('Please ensure all selected products have valid price and stock values.');
+        return;
+    }
+    
+    // Show bulk confirmation
+    document.getElementById('single-product-confirm').style.display = 'none';
+    document.getElementById('bulk-products-confirm').style.display = 'block';
+    
+    // Build products list
+    const productsList = document.getElementById('bulk-products-list');
+    productsList.innerHTML = '';
+    
+    let totalValue = 0;
+    products.forEach(product => {
+        totalValue += product.total;
+        const productDiv = document.createElement('div');
+        productDiv.className = 'border rounded p-2 mb-2';
+        productDiv.innerHTML = `
+            <div class="row">
+                <div class="col-6">
+                    <strong>${product.name}</strong>
+                </div>
+                <div class="col-2 text-center">
+                    ${product.stock}
+                </div>
+                <div class="col-2 text-center">
+                    ₹${product.price.toFixed(2)}
+                </div>
+                <div class="col-2 text-end">
+                    <strong>₹${formatIndianCurrency(product.total)}</strong>
+                </div>
+            </div>
+        `;
+        productsList.appendChild(productDiv);
+    });
+    
+    document.getElementById('bulk-confirm-count').textContent = products.length;
+    document.getElementById('bulk-confirm-total').textContent = `₹${formatIndianCurrency(totalValue)}`;
+    
+    // Store data for submission
+    document.getElementById('send-po-confirm').dataset.products = JSON.stringify(products);
+    document.getElementById('send-po-confirm').dataset.isBulk = 'true';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmPOModal'));
+    modal.show();
+}
+
+// Clear selection
+function clearSelection() {
+    document.getElementById('select-all-products').checked = false;
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = false);
+    updateSelectionSummary();
+}
+
+// Confirm send PO
+document.getElementById('send-po-confirm').addEventListener('click', function() {
+    const isBulk = this.dataset.isBulk === 'true';
+    const button = this;
+    const originalText = button.innerHTML;
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    
+    let selectedProducts = [];
+    
+    if (isBulk) {
+        const products = JSON.parse(this.dataset.products);
+        products.forEach(product => {
+            const row = document.querySelector(`tr[data-product-id="${product.id}"]`);
+            const toSupplier = row.querySelector(`#toSupplier${product.id}`).checked;
+            const toPODept = row.querySelector(`#toPODept${product.id}`).checked;
+            const toCatHead = row.querySelector(`#toCatHead${product.id}`).checked;
+            
+            selectedProducts.push({
+                id: product.id,
+                quantity: product.stock,
+                unit_price: product.price
+            });
+        });
+    } else {
+        const productId = this.dataset.productId;
+        const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+        const priceInput = row.querySelector('.proposed-price');
+        const stockInput = row.querySelector('.proposed-stock');
+        
+        selectedProducts.push({
+            id: productId,
+            quantity: parseInt(stockInput.value),
+            unit_price: parseFloat(priceInput.value)
+        });
+    }
+    
+    // Get email options (using first product's settings for bulk, or individual product settings)
+    const firstProductId = selectedProducts[0].id;
+    const emailOptions = {
+        to_supplier: document.querySelector(`#toSupplier${firstProductId}`).checked,
+        to_po_dept: document.querySelector(`#toPODept${firstProductId}`).checked,
+        to_cat_head: document.querySelector(`#toCatHead${firstProductId}`).checked
+    };
+    
+    // Send AJAX request
+    fetch('{% url "po_system:send_po" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            supplier_id: {{ supplier.id }},
+            products: selectedProducts,
+            email_options: emailOptions
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Hide modal
+            bootstrap.Modal.getInstance(document.getElementById('confirmPOModal')).hide();
+            
+            // Show success message
+            const totalValue = selectedProducts.reduce((sum, p) => sum + (p.quantity * p.unit_price), 0);
+            alert(`Purchase Order ${data.po_number} created successfully!\n\nProducts: ${selectedProducts.length}\nTotal Value: ₹${formatIndianCurrency(totalValue)}\n\n${data.message || 'Email notifications sent.'}`);
+            
+            // Disable sent buttons
+            selectedProducts.forEach(product => {
+                const button = document.querySelector(`.send-po-btn[data-product-id="${product.id}"]`);
+                if (button) {
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-check me-1"></i>Sent';
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-success');
+                }
+            });
+            
+            // Clear selection if bulk
+            if (isBulk) {
+                clearSelection();
+            }
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error occurred'));
+        }
+    })
+    .catch(error => {
+        alert('Error sending purchase order. Please try again.');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        // Reset button
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+});
 </script>
 {% endblock %}
