@@ -761,7 +761,7 @@ a:hover {
 
 /* Enhanced PO Creation Interface Styles */
 
-/* Editable Input Fields */
+/* Editable Input Fields - UPDATED with black text */
 .editable-input {
     border: 1px solid #e0e0e0;
     border-radius: 6px;
@@ -771,29 +771,54 @@ a:hover {
     font-weight: 500;
     transition: all 0.3s ease;
     background-color: #fff;
+    color: #000 !important; /* Force black text color */
 }
 
 .editable-input:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    background-color: #f8faff;
+    background-color: #ffffff; /* Pure white background on focus */
+    color: #000 !important; /* Ensure black text on focus */
 }
 
 .editable-input:hover {
     border-color: #bbb;
-    background-color: #fafafa;
+    background-color: #ffffff; /* Pure white background on hover */
+    color: #000 !important; /* Ensure black text on hover */
 }
 
 .editable-input:invalid {
     border-color: #e74c3c;
     background-color: #fff5f5;
+    color: #000 !important; /* Black text even when invalid */
+}
+
+/* For webkit browsers (Chrome, Safari) */
+.editable-input::-webkit-input-placeholder {
+    color: #999 !important;
+}
+
+/* For Firefox */
+.editable-input::-moz-placeholder {
+    color: #999 !important;
+    opacity: 1;
+}
+
+/* For IE */
+.editable-input:-ms-input-placeholder {
+    color: #999 !important;
+}
+
+/* Modern browsers */
+.editable-input::placeholder {
+    color: #999 !important;
 }
 
 /* Total Value Display */
 .total-value {
     font-weight: bold;
-    color: #27ae60;
+    color: #27ae60 !important; /* Force green color for total */
     font-size: 1.1em;
     padding: 8px 12px;
     background-color: #f8fff8;
@@ -812,7 +837,7 @@ a:hover {
 /* Unit Badge */
 .unit-badge {
     background-color: #f8f9fa;
-    color: #495057;
+    color: #495057 !important;
     padding: 2px 8px;
     border-radius: 12px;
     font-size: 0.8em;
@@ -823,13 +848,13 @@ a:hover {
 /* Price and Stock Displays */
 .price-display {
     font-weight: 500;
-    color: #2c3e50;
+    color: #2c3e50 !important;
     font-size: 0.95em;
 }
 
 .stock-display {
     background-color: #e3f2fd;
-    color: #1976d2;
+    color: #1976d2 !important;
     padding: 4px 8px;
     border-radius: 4px;
     font-weight: 500;
@@ -842,7 +867,7 @@ a:hover {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     border-radius: 6px;
-    color: white;
+    color: white !important;
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -854,7 +879,7 @@ a:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    color: white;
+    color: white !important;
 }
 
 .send-po-btn:disabled {
@@ -862,6 +887,7 @@ a:hover {
     transform: none;
     cursor: not-allowed;
     opacity: 0.7;
+    color: white !important;
 }
 
 .send-po-btn:active {
@@ -884,7 +910,7 @@ a:hover {
 
 .email-options .form-check-label {
     font-size: 0.85em;
-    color: #495057;
+    color: #495057 !important;
 }
 
 /* Enhanced Table Styling */
@@ -912,12 +938,12 @@ a:hover {
 /* Product Name Styling */
 .product-name {
     font-weight: 600;
-    color: #2c3e50;
+    color: #2c3e50 !important;
     font-size: 1em;
 }
 
 .product-category {
-    color: #7f8c8d;
+    color: #7f8c8d !important;
     font-size: 0.9em;
     margin-top: 2px;
 }
@@ -1014,7 +1040,7 @@ a:hover {
     background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
     border: none;
     border-radius: 6px;
-    color: white;
+    color: white !important;
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -1024,7 +1050,7 @@ a:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     background: linear-gradient(135deg, #219a52 0%, #27ae60 100%);
-    color: white;
+    color: white !important;
 }
 
 .bulk-action-btn:disabled {
@@ -1032,6 +1058,7 @@ a:hover {
     transform: none;
     cursor: not-allowed;
     opacity: 0.7;
+    color: white !important;
 }
 
 /* Animation Classes */
@@ -1196,4 +1223,96 @@ a:hover {
         background: transparent;
         font-weight: 700;
     }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .editable-input {
+        width: 100px;
+        padding: 6px 8px;
+        font-size: 0.9em;
+    }
+    
+    .total-value {
+        font-size: 1em;
+        padding: 6px 8px;
+        min-width: 100px;
+    }
+    
+    .send-po-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+    
+    .unit-badge {
+        font-size: 0.7em;
+        padding: 1px 6px;
+    }
+}
+
+@media (max-width: 576px) {
+    .editable-input {
+        width: 80px;
+        padding: 4px 6px;
+    }
+    
+    .total-value {
+        font-size: 0.9em;
+        padding: 4px 6px;
+        min-width: 80px;
+    }
+    
+    .product-name {
+        font-size: 0.9em;
+    }
+    
+    .product-category {
+        font-size: 0.8em;
+    }
+}
+
+/* Input number field specific styles */
+input[type="number"].editable-input {
+    color: #000 !important;
+    background-color: #ffffff !important;
+}
+
+input[type="number"].editable-input:focus {
+    color: #000 !important;
+    background-color: #ffffff !important;
+}
+
+/* Dark Mode Support Override */
+@media (prefers-color-scheme: dark) {
+    .editable-input {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-color: #ccc;
+    }
+    
+    .editable-input:focus {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-color: #3498db;
+    }
+    
+    .editable-input:hover {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+}
+
+/* Additional specificity for input elements */
+table .editable-input,
+.table .editable-input,
+.modal .editable-input {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}
+
+table .editable-input:focus,
+.table .editable-input:focus,
+.modal .editable-input:focus {
+    color: #000000 !important;
+    background-color: #ffffff !important;
 }

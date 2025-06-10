@@ -1,5 +1,72 @@
 {% extends 'po_system/base.html' %}
 
+<style>
+/* URGENT FIX: Force black text in input fields */
+input.editable-input,
+input[type="number"].editable-input,
+.editable-input,
+input.proposed-price,
+input.proposed-stock,
+.proposed-price,
+.proposed-stock {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #ccc !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+}
+
+/* Focus state */
+input.editable-input:focus,
+input[type="number"].editable-input:focus,
+.editable-input:focus,
+input.proposed-price:focus,
+input.proposed-stock:focus,
+.proposed-price:focus,
+.proposed-stock:focus {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5) !important;
+}
+
+/* Hover state */
+input.editable-input:hover,
+input[type="number"].editable-input:hover,
+.editable-input:hover,
+input.proposed-price:hover,
+input.proposed-stock:hover,
+.proposed-price:hover,
+.proposed-stock:hover {
+    color: #000000 !important;
+    background-color: #f8f9fa !important;
+}
+
+/* Override any Bootstrap or other framework styles */
+.modal input[type="number"],
+.table input[type="number"],
+table input[type="number"] {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}
+
+/* Placeholder text */
+input.editable-input::placeholder,
+input.proposed-price::placeholder,
+input.proposed-stock::placeholder {
+    color: #666666 !important;
+    opacity: 1 !important;
+}
+
+/* Additional overrides for maximum compatibility */
+* input.editable-input,
+* input.proposed-price,
+* input.proposed-stock {
+    color: #000000 !important;
+    background: #ffffff !important;
+}
+</style>
+
 {% block content %}
 <div class="container-fluid">
     <!-- Supplier Info Header -->
@@ -353,6 +420,26 @@
 {% endblock %}
 
 {% block extra_js %}
+
+<script>
+$(document).ready(function() {
+    // Force black text in input fields
+    function forceInputStyling() {
+        $('.editable-input, .proposed-price, .proposed-stock').each(function() {
+            this.style.setProperty('color', '#000000', 'important');
+            this.style.setProperty('background-color', '#ffffff', 'important');
+            this.style.setProperty('font-weight', '600', 'important');
+        });
+    }
+    
+    // Apply immediately and on modal show
+    forceInputStyling();
+    $('#productsModal').on('shown.bs.modal', function() {
+        setTimeout(forceInputStyling, 100);
+    });
+});
+</script>
+
 <script>
 // CSRF token setup for AJAX
 function getCookie(name) {

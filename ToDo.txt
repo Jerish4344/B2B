@@ -1,0 +1,17 @@
+• Move the project to your path.
+
+• pip install -r requirements.txt
+
+• Go to po_management/settings.py  --------> change the database 
+
+• python manage.py makemigrations
+
+• python manage.py migrate
+
+• python manage.py createsuperuser
+    • username : admin
+    • mail address : it@......com
+    • password : @dmin@321
+    • re enter pass : @dmin@321
+
+python manage.py runserver
