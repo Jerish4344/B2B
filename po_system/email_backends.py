@@ -1,143 +1,218 @@
-# po_system/email_backends.py - Fixed Complete Implementation
+# po_system/email_backends.py - API-Only Backend
 
-import ssl
-import smtplib
-import socket
-from django.core.mail.backends.smtp import EmailBackend
-from django.core.mail.utils import DNS_NAME
+import json
+import requests
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-class ZeptoMailBackend(EmailBackend):
+class APIOnlyEmailBackend:
     """
-    Custom email backend for Zepto Mail SMTP that handles SSL certificate verification.
-    This backend resolves the SSL certificate verification issues commonly encountered
-    with Zepto Mail SMTP servers.
+    Email backend that only uses APIs (no SMTP)
+    Works when SMTP ports are blocked
     """
     
-    def __init__(self, host=None, port=None, username=None, password=None,
-                 use_tls=None, fail_silently=False, use_ssl=None, timeout=None,
-                 ssl_keyfile=None, ssl_certfile=None, **kwargs):
-        """
-        Initialize the email backend with all required parameters
-        """
-        super().__init__(host, port, username, password, use_tls, fail_silently, 
-                         use_ssl, timeout, ssl_keyfile, ssl_certfile, **kwargs)
-        
-        # Set default local_hostname if not provided
-        if not hasattr(self, 'local_hostname') or self.local_hostname is None:
-            self.local_hostname = DNS_NAME.get_fqdn()
+    def __init__(self, fail_silently=False, **kwargs):
+        self.fail_silently = fail_silently
     
     def open(self):
-        """
-        Ensure an open connection to the email server. Return whether or not a new
-        connection was required (True or False).
-        """
-        if self.connection:
-            # Nothing to do if the connection is already open.
-            return False
-        
-        # If local_hostname is not specified, socket.getfqdn() gets used.
-        # For performance, we use the cached FQDN for local_hostname.
-        connection_params = {
-            'local_hostname': self.local_hostname
-        } if self.local_hostname else {}
-        
-        try:
-            # Create SSL context with relaxed certificate verification for Zepto Mail
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            
-            logger.info(f"Connecting to {self.host}:{self.port} with user {self.username}")
-            
-            # Create SMTP connection
-            self.connection = smtplib.SMTP(
-                self.host, 
-                self.port, 
-                timeout=self.timeout, 
-                **connection_params
-            )
-            
-            # Enable debug output if needed (useful for troubleshooting)
-            if getattr(self, 'debug', False):
-                self.connection.set_debuglevel(1)
-            
-            # Use TLS with our custom SSL context
-            if self.use_tls:
-                logger.info("Starting TLS connection...")
-                self.connection.starttls(context=ssl_context)
-                logger.info("TLS connection established")
-            
-            # Authenticate if credentials are provided
-            if self.username and self.password:
-                logger.info(f"Authenticating with username: {self.username}")
-                self.connection.login(self.username, self.password)
-                logger.info("Authentication successful")
-            
-            return True
-            
-        except (smtplib.SMTPException, OSError, socket.error) as e:
-            logger.error(f"Failed to connect to Zepto Mail SMTP: {e}")
-            if not self.fail_silently:
-                raise
-            return False
+        return True
     
     def close(self):
-        """Close the connection to the email server."""
-        if self.connection is None:
-            return
-        try:
-            try:
-                self.connection.quit()
-                logger.info("SMTP connection closed gracefully")
-            except (ssl.SSLError, smtplib.SMTPServerDisconnected):
-                # This happens when the connection was already disconnected
-                # by the server.
-                self.connection.close()
-                logger.info("SMTP connection force closed")
-        except smtplib.SMTPException:
-            if self.fail_silently:
-                return
-            raise
-        finally:
-            self.connection = None
-
-
-class ZeptoMailBackendSimple(EmailBackend):
-    """
-    Simplified version of Zepto Mail backend - use this if the above doesn't work
-    """
+        pass
     
-    def open(self):
-        """Open connection with minimal SSL handling"""
-        if self.connection:
+    def send_messages(self, email_messages):
+        """Send emails using various API services"""
+        
+        sent_count = 0
+        
+        for message in email_messages:
+            # Try different API services in order of preference
+            success = (
+                self._try_sendgrid_api(message) or
+                self._try_mailgun_api(message) or 
+                self._try_gmail_api(message)
+            )
+            
+            if success:
+                sent_count += 1
+            elif not self.fail_silently:
+                raise Exception("All email APIs failed")
+        
+        return sent_count
+    
+    def _try_sendgrid_api(self, message):
+        """Try SendGrid API (if you have API key)"""
+        
+        api_key = getattr(settings, 'SENDGRID_API_KEY', None)
+        if not api_key:
             return False
         
         try:
-            import smtplib
-            import ssl
+            payload = {
+                "personalizations": [
+                    {
+                        "to": [{"email": recipient} for recipient in message.to],
+                        "subject": message.subject
+                    }
+                ],
+                "from": {"email": getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')},
+                "content": [
+                    {
+                        "type": "text/plain",
+                        "value": message.body
+                    }
+                ]
+            }
             
-            # Create SSL context that ignores certificate verification
-            context = ssl.create_default_context()
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
+            # Add HTML content if available
+            for alternative in getattr(message, 'alternatives', []):
+                if alternative[1] == 'text/html':
+                    payload["content"].append({
+                        "type": "text/html",
+                        "value": alternative[0]
+                    })
+                    break
             
-            # Create SMTP connection
-            self.connection = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            }
             
-            # Start TLS with custom context
-            if self.use_tls:
-                self.connection.starttls(context=context)
+            response = requests.post(
+                'https://api.sendgrid.com/v3/mail/send',
+                data=json.dumps(payload),
+                headers=headers,
+                timeout=30
+            )
             
-            # Login
-            if self.username and self.password:
-                self.connection.login(self.username, self.password)
-            
-            return True
-            
+            if response.status_code == 202:
+                logger.info(f"Email sent via SendGrid API to {message.to}")
+                return True
+            else:
+                logger.error(f"SendGrid API failed: {response.status_code} - {response.text}")
+                return False
+                
         except Exception as e:
+            logger.error(f"SendGrid API error: {e}")
+            return False
+    
+    def _try_mailgun_api(self, message):
+        """Try Mailgun API (if you have API key)"""
+        
+        api_key = getattr(settings, 'MAILGUN_API_KEY', None)
+        domain = getattr(settings, 'MAILGUN_DOMAIN', None)
+        
+        if not api_key or not domain:
+            return False
+        
+        try:
+            data = {
+                'from': getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com'),
+                'to': message.to,
+                'subject': message.subject,
+                'text': message.body
+            }
+            
+            # Add HTML content if available
+            for alternative in getattr(message, 'alternatives', []):
+                if alternative[1] == 'text/html':
+                    data['html'] = alternative[0]
+                    break
+            
+            response = requests.post(
+                f'https://api.mailgun.net/v3/{domain}/messages',
+                auth=('api', api_key),
+                data=data,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                logger.info(f"Email sent via Mailgun API to {message.to}")
+                return True
+            else:
+                logger.error(f"Mailgun API failed: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Mailgun API error: {e}")
+            return False
+    
+    def _try_gmail_api(self, message):
+        """Try Gmail API (requires OAuth setup)"""
+        
+        # Gmail API requires OAuth2 setup which is more complex
+        # For now, return False
+        # You would need to implement OAuth2 flow for Gmail API
+        return False
+
+
+# Simple Gmail SMTP backend for testing
+class GmailSMTPBackend:
+    """
+    Simple Gmail SMTP backend
+    """
+    
+    def __init__(self, fail_silently=False, **kwargs):
+        self.fail_silently = fail_silently
+    
+    def open(self):
+        return True
+    
+    def close(self):
+        pass
+    
+    def send_messages(self, email_messages):
+        """Send emails via Gmail SMTP"""
+        
+        import smtplib
+        import ssl
+        from email.message import EmailMessage
+        
+        gmail_user = getattr(settings, 'GMAIL_USER', None)
+        gmail_password = getattr(settings, 'GMAIL_PASSWORD', None)
+        
+        if not gmail_user or not gmail_password:
+            if not self.fail_silently:
+                raise Exception("Gmail credentials not configured")
+            return 0
+        
+        sent_count = 0
+        
+        try:
+            context = ssl.create_default_context()
+            with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                server.starttls(context=context)
+                server.login(gmail_user, gmail_password)
+                
+                for message in email_messages:
+                    try:
+                        # Convert Django EmailMessage to standard EmailMessage
+                        msg = EmailMessage()
+                        msg['Subject'] = message.subject
+                        msg['From'] = gmail_user
+                        msg['To'] = ', '.join(message.to)
+                        msg.set_content(message.body)
+                        
+                        # Add HTML content if available
+                        for alternative in getattr(message, 'alternatives', []):
+                            if alternative[1] == 'text/html':
+                                msg.add_alternative(alternative[0], subtype='html')
+                                break
+                        
+                        server.send_message(msg)
+                        sent_count += 1
+                        logger.info(f"Email sent via Gmail to {message.to}")
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to send email via Gmail: {e}")
+                        if not self.fail_silently:
+                            raise
+                            
+        except Exception as e:
+            logger.error(f"Gmail SMTP connection failed: {e}")
             if not self.fail_silently:
                 raise
-            return False
+        
+        return sent_count

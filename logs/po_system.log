@@ -89,3 +89,33 @@ INFO 2025-06-09 10:25:48,552 email_backends 87515 6168604672 Authenticating with
 INFO 2025-06-09 10:25:48,676 email_backends 87515 6168604672 Authentication successful
 INFO 2025-06-09 10:25:49,218 email_backends 87515 6168604672 SMTP connection closed gracefully
 INFO 2025-06-09 10:25:49,224 email_service 87515 6168604672 PO 20250609102547447D1253 sent via SMTP to ['jerish220@gmail.com']
+INFO 2025-06-11 05:16:03,567 email_backends 2 139026061776768 Connecting to smtp.zeptomail.in:587 with user emailapikey
+ERROR 2025-06-11 05:16:03,572 email_backends 2 139026061776768 Failed to connect to Zepto Mail SMTP: [Errno 111] Connection refused
+INFO 2025-06-11 05:16:23,676 email_backends 2 139026061776768 Connecting to smtp.zeptomail.in:587 with user emailapikey
+ERROR 2025-06-11 05:16:23,678 email_backends 2 139026061776768 Failed to connect to Zepto Mail SMTP: [Errno 111] Connection refused
+INFO 2025-06-11 05:26:29,538 email_backends 2 139026061776768 Connecting to smtp.zeptomail.in:587 with user emailapikey
+ERROR 2025-06-11 05:26:29,582 email_backends 2 139026061776768 Failed to connect to Zepto Mail SMTP: [Errno 111] Connection refused
+INFO 2025-06-11 05:48:55,458 email_backends 2 139026061776768 Connecting to smtp.zeptomail.in:587 with user emailapikey
+ERROR 2025-06-11 05:48:55,463 email_backends 2 139026061776768 Failed to connect to Zepto Mail SMTP: [Errno 111] Connection refused
+INFO 2025-06-11 06:02:08,785 email_backends 711 140011186905536 Connecting to smtp.zeptomail.in:587 with user emailapikey
+ERROR 2025-06-11 06:02:08,798 email_backends 711 140011186905536 SMTP connection failed: [Errno 111] Connection refused
+INFO 2025-06-11 06:02:08,798 email_backends 711 140011186905536 SMTP failed, will use API fallback for email sending
+ERROR 2025-06-11 06:02:08,799 email_backends 711 140011186905536 SMTP sending failed: 'str' object has no attribute 'sendmail'
+INFO 2025-06-11 06:02:08,799 email_backends 711 140011186905536 Falling back to API for email sending
+ERROR 2025-06-11 06:02:09,425 email_backends 711 140011186905536 API sending failed: 401 - {"error":{"code":"TM_4001","details":[{"code":"SM_113","target_value":"admin@jeyarama.com","message":"Invalid email address","target":"bounce_address"}],"message":"Access Denied","request_id":"2518b.41b56e9dd2b4e057.m1.9c2e4fb0-4689-11f0-a5e9-525400c92439.1975d94e82b"}}
+ERROR 2025-06-11 06:02:09,425 email_backends 711 140011186905536 API sending failed for message: API error: 401 - {"error":{"code":"TM_4001","details":[{"code":"SM_113","target_value":"admin@jeyarama.com","message":"Invalid email address","target":"bounce_address"}],"message":"Access Denied","request_id":"2518b.41b56e9dd2b4e057.m1.9c2e4fb0-4689-11f0-a5e9-525400c92439.1975d94e82b"}}
+ERROR 2025-06-11 06:33:14,441 email_service 2 126406324778880 SMTP sending failed for PO 2025061106331412641C85: Module "po_system.email_backends" does not define a "ZeptoMailSimpleBackend" attribute/class
+WARNING 2025-06-11 06:33:14,442 email_service 2 126406324778880 SMTP failed for PO 2025061106331412641C85: Module "po_system.email_backends" does not define a "ZeptoMailSimpleBackend" attribute/class
+ERROR 2025-06-11 06:33:15,055 email_service 2 126406324778880 API sending failed for PO 2025061106331412641C85: API returned 401: {"error":{"code":"TM_4001","details":[{"code":"SM_113","target_value":"noreply@jeyarama.com","message":"Invalid email address","target":"bounce_address"}],"message":"Access Denied","request_id":"2518b.41b56e9dd2b4e057.m1.f42e1840-468d-11f0-8d46-ae9c7e0b6a9f.1975db15fc4"}}
+ERROR 2025-06-11 06:33:15,056 email_service 2 126406324778880 API also failed for PO 2025061106331412641C85: API returned 401: {"error":{"code":"TM_4001","details":[{"code":"SM_113","target_value":"noreply@jeyarama.com","message":"Invalid email address","target":"bounce_address"}],"message":"Access Denied","request_id":"2518b.41b56e9dd2b4e057.m1.f42e1840-468d-11f0-8d46-ae9c7e0b6a9f.1975db15fc4"}}
+ERROR 2025-06-11 06:55:23,266 email_service 2 126406324778880 SMTP sending failed for PO 2025061106331412641C85: Module "po_system.email_backends" does not define a "ZeptoMailSimpleBackend" attribute/class
+WARNING 2025-06-11 06:55:23,267 email_service 2 126406324778880 SMTP failed for PO 2025061106331412641C85: Module "po_system.email_backends" does not define a "ZeptoMailSimpleBackend" attribute/class
+ERROR 2025-06-11 06:55:23,934 email_service 2 126406324778880 API sending failed for PO 2025061106331412641C85: API returned 401: {"error":{"code":"TM_4001","details":[{"code":"SM_113","target_value":"noreply@jeyarama.com","message":"Invalid email address","target":"bounce_address"}],"message":"Access Denied","request_id":"2518b.41b56e9dd2b4e057.m1.0c40f030-4691-11f0-a5e9-525400c92439.1975dc5a6b3"}}
+ERROR 2025-06-11 06:55:23,934 email_service 2 126406324778880 API also failed for PO 2025061106331412641C85: API returned 401: {"error":{"code":"TM_4001","details":[{"code":"SM_113","target_value":"noreply@jeyarama.com","message":"Invalid email address","target":"bounce_address"}],"message":"Access Denied","request_id":"2518b.41b56e9dd2b4e057.m1.0c40f030-4691-11f0-a5e9-525400c92439.1975dc5a6b3"}}
+INFO 2025-06-11 07:44:20,124 email_service 2 132655447984000 Email sent successfully via API to 1 recipients
+ERROR 2025-06-11 07:44:45,980 email_service 2 132655447984000 Exception in send_po_email: po_system/email/po_email.html
+ERROR 2025-06-11 07:45:05,940 email_service 2 132655447984000 Exception in send_po_email: po_system/email/po_email.html
+ERROR 2025-06-11 07:45:18,205 email_service 2 132655447984000 Exception in send_po_email: po_system/email/po_email.html
+ERROR 2025-06-11 07:51:57,865 email_service 2 138363925075840 Exception in send_po_email: 'PurchaseOrder' object has no attribute 'notes'
+INFO 2025-06-11 08:37:01,851 email_service 2 138839765538688 Email sent successfully via API to 3 recipients
+INFO 2025-06-11 09:34:49,568 email_service 2 123739510933376 Email sent successfully via API to 3 recipients

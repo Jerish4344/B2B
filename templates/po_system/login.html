@@ -7,7 +7,422 @@
     <title>Login - B2B PO Management System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+    
+    <style>
+        /* Critical CSS embedded for login page */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-600: #6c757d;
+            --gray-800: #343a40;
+            --primary-gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            --button-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            --border-radius: 10px;
+            --border-radius-xl: 25px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            color: var(--gray-800);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-gradient);
+            padding: 2rem 1rem;
+            position: relative;
+        }
+
+        /* Add animated background */
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .auth-header .icon {
+            font-size: 4rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .auth-header h2 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .auth-header p {
+            color: var(--gray-600);
+            margin-bottom: 0;
+            font-size: 1.1rem;
+        }
+
+        .auth-form {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius-xl);
+            padding: 0.875rem 1.25rem;
+            font-size: 1rem;
+            transition: all var(--transition-speed) ease;
+            background-color: var(--gray-100);
+            margin-bottom: 0;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            background-color: white;
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group-text {
+            background: var(--gray-100);
+            border: 2px solid var(--gray-200);
+            border-right: none;
+            border-radius: var(--border-radius-xl) 0 0 var(--border-radius-xl);
+            padding: 0.875rem 1rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .input-group .form-control {
+            border-radius: 0 var(--border-radius-xl) var(--border-radius-xl) 0;
+            border-left: none;
+            margin-bottom: 0;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: var(--secondary-color);
+            background-color: white;
+        }
+
+        .input-group:focus-within .form-control {
+            border-color: var(--secondary-color);
+        }
+
+        .form-check {
+            margin-bottom: 2rem;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .form-check-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .form-check-label {
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .btn {
+            border-radius: var(--border-radius-xl);
+            padding: 0.875rem 1.5rem;
+            font-weight: 600;
+            transition: all var(--transition-speed) ease;
+            font-size: 1.1rem;
+            width: 100%;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: var(--button-shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6);
+            background: linear-gradient(135deg, #1a252f, #2980b9);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .auth-links p {
+            color: var(--gray-600);
+            margin-bottom: 0;
+        }
+
+        .auth-links a {
+            color: var(--secondary-color);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+            color: var(--primary-color);
+        }
+
+        /* Alert Styles */
+        .alert {
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .alert-success {
+            background-color: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert-warning {
+            background-color: rgba(243, 156, 18, 0.1);
+            color: #f39c12;
+            border-left: 4px solid #f39c12;
+        }
+
+        .alert-info {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--secondary-color);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .btn-close {
+            filter: none;
+            opacity: 0.8;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 576px) {
+            .auth-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .auth-card {
+                padding: 2rem 1.5rem;
+                margin: 1rem 0;
+            }
+
+            .auth-header .icon {
+                font-size: 3rem;
+            }
+
+            .auth-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .auth-header p {
+                font-size: 1rem;
+            }
+
+            .form-control {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .input-group-text {
+                padding: 0.75rem 0.875rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .auth-card {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        /* Loading state */
+        .btn-primary.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-primary.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Focus visible for accessibility */
+        .btn:focus-visible {
+            outline: 2px solid var(--secondary-color);
+            outline-offset: 2px;
+        }
+
+        .form-control:focus-visible {
+            outline: none;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .auth-card {
+                border: 2px solid var(--gray-800);
+            }
+            
+            .form-control {
+                border-width: 2px;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .auth-card,
+            .auth-header .icon,
+            .alert,
+            .btn,
+            .form-control,
+            .auth-container::before {
+                animation: none;
+                transition: none;
+            }
+            
+            .btn-primary:hover {
+                transform: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="auth-container">
@@ -24,7 +439,7 @@
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -36,29 +451,25 @@
                 </div>
             {% endif %}
 
-            <form method="post" action="{% url 'po_system:login' %}" class="auth-form">
+            <form method="post" action="{% url 'po_system:login' %}" class="auth-form" id="loginForm">
                 {% csrf_token %}
-                <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0">
-                            <i class="fas fa-user text-secondary"></i>
-                        </span>
-                        <input type="text" name="username" class="form-control" placeholder="Username" required>
-                    </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0">
+                        <i class="fas fa-user text-secondary"></i>
+                    </span>
+                    <input type="text" name="username" class="form-control" placeholder="Username" required autocomplete="username">
                 </div>
-                <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0">
-                            <i class="fas fa-lock text-secondary"></i>
-                        </span>
-                        <input type="password" name="password" class="form-control" placeholder="Password" required>
-                    </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0">
+                        <i class="fas fa-lock text-secondary"></i>
+                    </span>
+                    <input type="password" name="password" class="form-control" placeholder="Password" required autocomplete="current-password">
                 </div>
-                <div class="mb-3 form-check">
+                <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="remember-me" name="remember_me">
                     <label class="form-check-label" for="remember-me">Remember me</label>
                 </div>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="loginBtn">
                     <i class="fas fa-sign-in-alt me-2"></i>Login
                 </button>
                 <input type="hidden" name="next" value="{{ next|default:'po_system:dashboard' }}">
@@ -71,5 +482,35 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add loading state to login button
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="me-2"></span>Signing in...';
+        });
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+
+        // Add smooth focus transitions
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
 </body>
 </html>

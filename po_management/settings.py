@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-o2m0(l7re+j!ycgf4r9wetax5&3pe_*2lf@yueu&!70^+n7fid'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['192.168.1.8', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['jerish.pythonanywhere.com','192.168.1.8', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -64,7 +64,7 @@ ZEPTO_FROM_NAME = 'Jeyarama Company'
 COMPANY_NAME = 'Jeyarama Company'
 COMPANY_PHONE = '+91 9944406089'
 COMPANY_EMAIL = 'info@jeyarama.com'
-PO_DEPARTMENT_EMAIL = 'jerish@jcrc.in'
+PO_DEPARTMENT_EMAIL = 'jerish220@gmail.com'
 
 # Email timeout settings
 EMAIL_TIMEOUT = 60
@@ -85,7 +85,7 @@ ROOT_URLCONF = 'po_management.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -103,12 +103,14 @@ WSGI_APPLICATION = 'po_management.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'mysql.connector.django',
-        'NAME': 'po_db',
-        'USER': 'root',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'jerish$po_db',
+        'USER': 'jerish',
         'PASSWORD': 'root@2001',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'HOST': 'jerish.mysql.pythonanywhere-services.com',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
@@ -132,21 +134,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = '/home/jerish/B2B/staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/home/jerish/B2B/media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -116,6 +116,7 @@ class PurchaseOrder(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     sent_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True, null=True, help_text="Additional notes or instructions")
 
     def __str__(self):
         return f"PO-{self.po_number} - {self.supplier.name}"
